@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusmail.mapper.MailAccountMapper">
+    <resultMap id="MailAccountResult" type="com.campusmail.entity.MailAccount">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="emailAddress" column="email_address"/>
+        <result property="displayName" column="display_name"/>
+        <result property="smtpHost" column="smtp_host"/>
+        <result property="smtpPort" column="smtp_port"/>
+        <result property="isDefault" column="is_default"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.campusmail.entity.MailAccount" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO mail_account (user_id, email_address, display_name, smtp_host, smtp_port, is_default)
+        VALUES (#{userId}, #{emailAddress}, #{displayName}, #{smtpHost}, #{smtpPort}, #{isDefault})
+    </insert>
+
+    <update id="update" parameterType="com.campusmail.entity.MailAccount">
+        UPDATE mail_account
+        SET email_address = #{emailAddress}, display_name = #{displayName},
+            smtp_host = #{smtpHost}, smtp_port = #{smtpPort},
+            is_default = #{isDefault}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM mail_account WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultMap="MailAccountResult">
+        SELECT * FROM mail_account WHERE id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="MailAccountResult">
+        SELECT * FROM mail_account WHERE user_id = #{userId}
+    </select>
+
+    <select id="findDefaultByUserId" resultMap="MailAccountResult">
+        SELECT * FROM mail_account WHERE user_id = #{userId} AND is_default = 1 LIMIT 1
+    </select>
+
+    <select id="findByEmailAddress" resultMap="MailAccountResult">
+        SELECT * FROM mail_account WHERE LOWER(email_address) = LOWER(#{emailAddress}) LIMIT 1
+    </select>
+
+    <update id="clearDefaultByUserId">
+        UPDATE mail_account SET is_default = 0 WHERE user_id = #{userId}
+    </update>
+
+    <select id="countDefaultByUserId" resultType="int">
+        SELECT COUNT(*) FROM mail_account WHERE user_id = #{userId} AND is_default = 1
+    </select>
+
+    <update id="updateDefaultFlag">
+        UPDATE mail_account SET is_default = #{isDefault}
+        WHERE id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusmail.mapper.AttachmentMapper">
+    <resultMap id="AttachmentResult" type="com.campusmail.entity.Attachment">
+        <id property="id" column="id"/>
+        <result property="mailId" column="mail_id"/>
+        <result property="fileName" column="file_name"/>
+        <result property="fileType" column="file_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="storagePath" column="storage_path"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.campusmail.entity.Attachment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attachment (mail_id, file_name, file_type, file_size, storage_path)
+        VALUES (#{mailId}, #{fileName}, #{fileType}, #{fileSize}, #{storagePath})
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO attachment (mail_id, file_name, file_type, file_size, storage_path)
+        VALUES
+        <foreach collection="attachments" item="item" separator=",">
+            (#{item.mailId}, #{item.fileName}, #{item.fileType}, #{item.fileSize}, #{item.storagePath})
+        </foreach>
+    </insert>
+
+    <select id="findByMailId" resultMap="AttachmentResult">
+        SELECT * FROM attachment WHERE mail_id = #{mailId}
+    </select>
+
+    <select id="findById" resultMap="AttachmentResult">
+        SELECT * FROM attachment WHERE id = #{id}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM attachment WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByMailId">
+        DELETE FROM attachment WHERE mail_id = #{mailId}
+    </delete>
+
+    <update id="updateMailId">
+        UPDATE attachment SET mail_id = #{mailId} WHERE id = #{id}
+    </update>
+</mapper>

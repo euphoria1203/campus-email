@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campusmail.mapper.MailMapper">
+    <resultMap id="MailResult" type="com.campusmail.entity.Mail">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="accountId" column="account_id"/>
+        <result property="folder" column="folder"/>
+        <result property="fromAddress" column="from_address"/>
+        <result property="toAddress" column="to_address"/>
+        <result property="ccAddress" column="cc_address"/>
+        <result property="bccAddress" column="bcc_address"/>
+        <result property="subject" column="subject"/>
+        <result property="content" column="content"/>
+        <result property="plainContent" column="plain_content"/>
+        <result property="isRead" column="is_read"/>
+        <result property="isStarred" column="is_starred"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="hasAttachment" column="has_attachment"/>
+        <result property="priority" column="priority"/>
+        <result property="sendTime" column="send_time"/>
+        <result property="receiveTime" column="receive_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.campusmail.entity.Mail" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO mail (user_id, account_id, folder, from_address, to_address, cc_address, bcc_address,
+                         subject, content, plain_content, is_read, is_starred, is_deleted, has_attachment,
+                         priority, send_time, receive_time)
+        VALUES (#{userId}, #{accountId}, #{folder}, #{fromAddress}, #{toAddress}, #{ccAddress}, #{bccAddress},
+                #{subject}, #{content}, #{plainContent}, #{isRead}, #{isStarred}, #{isDeleted}, #{hasAttachment},
+                #{priority}, #{sendTime}, #{receiveTime})
+    </insert>
+
+    <update id="update" parameterType="com.campusmail.entity.Mail">
+        UPDATE mail
+        SET subject = #{subject}, content = #{content}, plain_content = #{plainContent},
+            to_address = #{toAddress}, cc_address = #{ccAddress}, bcc_address = #{bccAddress},
+            is_read = #{isRead}, is_starred = #{isStarred}, is_deleted = #{isDeleted},
+            has_attachment = #{hasAttachment}, folder = #{folder},
+            priority = #{priority}, send_time = #{sendTime}, receive_time = #{receiveTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM mail WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultMap="MailResult">
+        SELECT * FROM mail WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <select id="findByIdIncludingDeleted" resultMap="MailResult">
+        SELECT * FROM mail WHERE id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="MailResult">
+        SELECT * FROM mail WHERE user_id = #{userId} AND is_deleted = 0 ORDER BY receive_time DESC, send_time DESC
+    </select>
+
+    <select id="findByUserIdAndFolder" resultMap="MailResult">
+        SELECT * FROM mail 
+        WHERE user_id = #{userId} AND folder = #{folder} AND is_deleted = 0 
+        ORDER BY receive_time DESC, send_time DESC
+    </select>
+
+    <select id="findStarredByUserId" resultMap="MailResult">
+        SELECT * FROM mail
+        WHERE user_id = #{userId} AND is_starred = 1 AND is_deleted = 0
+        ORDER BY receive_time DESC, send_time DESC
+    </select>
+
+    <select id="findTrashByUserId" resultMap="MailResult">
+        SELECT * FROM mail
+        WHERE user_id = #{userId}
+          AND is_deleted = 1
+          AND (folder = 'trash' OR folder LIKE 'trash:%')
+        ORDER BY receive_time DESC, send_time DESC
+    </select>
+
+    <select id="findByAccountId" resultMap="MailResult">
+        SELECT * FROM mail WHERE account_id = #{accountId} AND is_deleted = 0 ORDER BY receive_time DESC, send_time DESC
+    </select>
+
+    <update id="markAsRead">
+        UPDATE mail SET is_read = 1 WHERE id = #{id}
+    </update>
+
+    <update id="toggleStar">
+        UPDATE mail SET is_starred = NOT is_starred WHERE id = #{id}
+    </update>
+
+    <update id="moveToTrash">
+        UPDATE mail
+        SET is_deleted = 1,
+            folder = CASE
+                WHEN folder = 'trash' OR folder LIKE 'trash:%' THEN folder
+                ELSE CONCAT('trash:', COALESCE(folder, 'inbox'))
+            END
+        WHERE id = #{id}
+    </update>
+
+    <delete id="batchDelete">
+        DELETE FROM mail WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deletePermanently">
+        DELETE FROM mail WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="countUnreadByUserId" resultType="int">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND folder = 'inbox' AND is_read = 0 AND is_deleted = 0
+    </select>
+
+    <select id="countDraftsByUserId" resultType="int">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND folder = 'drafts' AND is_deleted = 0
+    </select>
+</mapper>
