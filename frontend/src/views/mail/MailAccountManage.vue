@@ -96,7 +96,8 @@ const rules = {
   ]
 }
 
-const userId = Number(localStorage.getItem('userId') || 0)
+// 保持字符串，避免 Snowflake ID 精度丢失
+const userId = localStorage.getItem('userId') || ''
 
 const loadAccounts = async () => {
   if (!userId) return

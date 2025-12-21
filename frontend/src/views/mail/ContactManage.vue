@@ -112,7 +112,8 @@ const rules = {
 
 const dialogTitle = computed(() => (isEdit.value ? '编辑联系人' : '新增联系人'))
 
-const userId = Number(localStorage.getItem('userId') || 0)
+// 保持字符串，避免 Snowflake ID 精度丢失
+const userId = localStorage.getItem('userId') || ''
 
 const filteredContacts = computed(() => {
   if (!searchKeyword.value) {

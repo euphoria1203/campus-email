@@ -109,8 +109,8 @@
         </el-tag>
         
         <div class="mail-content">
-          <span class="mail-subject">{{ mail.subject || '(无主题)' }}</span>
-          <span class="mail-preview"> - {{ getPreview(mail) }}</span>
+          <span class="mail-subject" v-html="renderSubject(mail)"></span>
+          <span class="mail-preview" v-html="renderPreview(mail)"></span>
         </div>
 
         <div class="mail-attachment" v-if="mail.hasAttachment">
@@ -243,6 +243,36 @@ const getPreview = (mail) => {
   // 移除HTML标签
   const text = content.replace(/<[^>]*>/g, '')
   return text.substring(0, 100)
+}
+
+// 基于关键词生成高亮展示内容（对原文做 HTML 转义后再插入 <mark>）
+const escapeHtml = (text = '') =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+const escapeRegex = (text = '') => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const highlightText = (text = '') => {
+  const keyword = searchKeyword.value.trim()
+  const safe = escapeHtml(text)
+  if (!keyword) return safe
+  const pattern = new RegExp(escapeRegex(keyword), 'gi')
+  return safe.replace(pattern, (match) => `<mark>${match}</mark>`)
+}
+
+const renderSubject = (mail) => {
+  const subject = mail?.subject || '(无主题)'
+  return highlightText(subject)
+}
+
+const renderPreview = (mail) => {
+  const preview = getPreview(mail)
+  const highlighted = highlightText(preview)
+  return ` - ${highlighted}`
 }
 
 // 格式化发件人显示（提取名称或邮箱）

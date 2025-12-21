@@ -129,8 +129,23 @@ const getPayloadAccountId = () => {
   if (raw === null || raw === undefined || raw === '') {
     return null
   }
-  const parsed = Number(raw)
-  return Number.isNaN(parsed) ? null : parsed
+  // 不转 Number，避免超出 JS 安全整数导致 Snowflake ID 精度丢失
+  return raw
+}
+
+// 确保附件已全部上传完成
+const ensureAttachmentsReady = () => {
+  const uploading = attachments.value.some(a => a.status === 'uploading')
+  if (uploading) {
+    ElMessage.warning('附件正在上传，请稍后再发送')
+    return false
+  }
+  const missingId = attachments.value.some(a => !a.id && a.status !== 'fail')
+  if (missingId) {
+    ElMessage.warning('附件尚未上传完成，请稍后重试')
+    return false
+  }
+  return true
 }
 
 // 切换抄送/密送显示
@@ -143,6 +158,9 @@ const sendMail = async () => {
   // 验证
   if (!hasAnyRecipient()) {
     ElMessage.warning('请至少填写一个收件人/抄送/密送')
+    return
+  }
+  if (!ensureAttachmentsReady()) {
     return
   }
   if (!mail.subject.trim()) {
@@ -197,6 +215,9 @@ const saveDraft = async () => {
   const userId = localStorage.getItem('userId')
   if (!userId) {
     ElMessage.error('请先登录后再保存草稿')
+    return
+  }
+  if (!ensureAttachmentsReady()) {
     return
   }
 

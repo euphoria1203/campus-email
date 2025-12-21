@@ -42,6 +42,7 @@ public interface MailMapper {
     List<Mail> search(@Param("userId") Long userId,
                       @Param("keyword") String keyword,
                       @Param("folder") String folder,
+                      @Param("accountId") Long accountId,
                       @Param("limit") int limit,
                       @Param("offset") int offset);
 

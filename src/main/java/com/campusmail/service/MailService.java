@@ -43,5 +43,5 @@ public interface MailService {
     /**
      * 全文搜索用户邮件
      */
-    List<Mail> search(Long userId, String keyword, String folder, int page, int size);
+    List<Mail> search(Long userId, String keyword, String folder, Long accountId, int page, int size);
 }

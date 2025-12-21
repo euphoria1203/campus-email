@@ -24,6 +24,19 @@ export const mailApi = {
     return api.get(`/mails/user/${userId}`, { params: { folder } })
   },
 
+  // 搜索邮件（后端全文检索）
+  search({ keyword, folder = '', accountId = null, page = 0, size = 200 }) {
+    return api.get('/mails/search', {
+      params: {
+        keyword,
+        folder,
+        accountId,
+        page,
+        size
+      }
+    })
+  },
+
   // 获取邮件详情
   get(id) {
     return api.get(`/mails/${id}`)

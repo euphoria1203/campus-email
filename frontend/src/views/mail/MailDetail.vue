@@ -12,7 +12,6 @@
         <el-button :icon="ArrowLeft" @click="$router.back()">返回</el-button>
         <el-button-group>
           <el-button :icon="Delete" @click="handleDelete">删除</el-button>
-          <el-button :icon="Printer" @click="handlePrint">打印</el-button>
             <el-button :icon="Promotion" type="primary" @click="handleForward">转发</el-button>
         </el-button-group>
         <div class="nav-buttons">
@@ -112,6 +111,7 @@
             placeholder="快速回复..."
           />
           <div class="reply-actions">
+            <el-checkbox v-model="includeOriginal" style="margin-right: 12px">包含原邮件</el-checkbox>
             <el-button type="primary" :icon="Promotion" @click="handleReply" :loading="sending">发送</el-button>
           </div>
         </div>
@@ -130,7 +130,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
-  ArrowLeft, Delete, Printer, ArrowUp, ArrowDown,
+  ArrowLeft, Delete, ArrowUp, ArrowDown,
   Star, StarFilled, Paperclip, Document, Download, Promotion, Loading, Plus, Edit
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -147,6 +147,7 @@ const mail = ref(null)
 const attachments = ref([])
 const isContact = ref(false)
 const replyContent = ref('')
+const includeOriginal = ref(true)
 
 const isInbox = computed(() => mail.value?.folder === 'inbox')
 const isDraft = computed(() => mail.value?.folder === 'drafts')
@@ -258,6 +259,9 @@ const formatFileSize = (bytes) => {
   return `${bytes.toFixed(i > 0 ? 1 : 0)} ${units[i]}`
 }
 
+// 去除 HTML 标签，生成纯文本
+const stripHtml = (text = '') => text.replace(/<[^>]*>/g, '')
+
 // 加载邮件详情
 const loadMailDetail = async () => {
   loading.value = true
@@ -309,11 +313,6 @@ const handleForward = () => {
   })
 }
 
-// 打印
-const handlePrint = () => {
-  window.print()
-}
-
 // 下载附件
 const downloadAttachment = async (att) => {
   try {
@@ -338,13 +337,41 @@ const downloadAttachment = async (att) => {
   }
 }
 
-// 发送回复
+// 发送回复（带上原文）
 const handleReply = async () => {
   if (!replyContent.value.trim()) {
     ElMessage.warning('请输入回复内容')
     return
   }
-  
+
+  let finalHtml = replyContent.value.replace(/\n/g, '<br/>')
+  let finalPlain = replyContent.value
+
+  if (includeOriginal.value) {
+    const originalHtml = mail.value?.content || mail.value?.plainContent || ''
+    const originalPlain = stripHtml(mail.value?.plainContent || mail.value?.content || '')
+    
+    const dateStr = formatDateTime(mail.value.receiveTime || mail.value.sendTime)
+    const sender = `${getSenderName(mail.value.fromAddress)} <${getSenderEmail(mail.value.fromAddress)}>`
+    
+    const headerHtml = `
+      <br/><br/>
+      <div style="background-color: #f6f8fa; padding: 12px; border-left: 4px solid #409eff; margin: 20px 0; font-size: 13px; color: #606266;">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #303133;">------------------ 原始邮件 ------------------</div>
+        <div style="margin-bottom: 4px;"><b>发件人:</b> ${sender}</div>
+        <div style="margin-bottom: 4px;"><b>发送时间:</b> ${dateStr}</div>
+        <div style="margin-bottom: 4px;"><b>收件人:</b> ${mail.value.toAddress}</div>
+        <div><b>主题:</b> ${mail.value.subject}</div>
+      </div>
+      <div>${originalHtml}</div>
+    `
+    
+    const headerPlain = `\n\n------------------ 原始邮件 ------------------\n发件人: ${sender}\n发送时间: ${dateStr}\n主题: ${mail.value.subject}\n\n`
+    
+    finalHtml += headerHtml
+    finalPlain += headerPlain + originalPlain
+  }
+
   sending.value = true
   try {
     const userId = localStorage.getItem('userId')
@@ -352,8 +379,8 @@ const handleReply = async () => {
       userId: userId,
       toAddress: mail.value.fromAddress,
       subject: `Re: ${mail.value.subject || '(无主题)'}`,
-      content: replyContent.value,
-      plainContent: replyContent.value
+      content: finalHtml,
+      plainContent: finalPlain
     })
     ElMessage.success('回复发送成功')
     replyContent.value = ''

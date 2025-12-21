@@ -26,11 +26,11 @@
 
     <insert id="insert" parameterType="com.campusmail.entity.Mail" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO mail (user_id, account_id, folder, from_address, to_address, cc_address, bcc_address,
-                         subject, content, plain_content, is_read, is_starred, is_deleted, has_attachment,
-                         priority, send_time, receive_time)
+                 subject, content, plain_content, is_read, is_starred, is_deleted, has_attachment,
+                 priority, send_time, receive_time)
         VALUES (#{userId}, #{accountId}, #{folder}, #{fromAddress}, #{toAddress}, #{ccAddress}, #{bccAddress},
-                #{subject}, #{content}, #{plainContent}, #{isRead}, #{isStarred}, #{isDeleted}, #{hasAttachment},
-                #{priority}, #{sendTime}, #{receiveTime})
+            #{subject}, #{content}, #{plainContent}, #{isRead}, #{isStarred}, #{isDeleted}, #{hasAttachment},
+            #{priority}, #{sendTime}, #{receiveTime})
     </insert>
 
     <update id="update" parameterType="com.campusmail.entity.Mail">
@@ -85,14 +85,29 @@
 
     <select id="search" resultMap="MailResult">
         SELECT *,
-               MATCH(subject, plain_content, content, from_address, to_address, cc_address) AGAINST (#{keyword} IN BOOLEAN MODE) AS score
+               MATCH(subject, plain_content, content, from_address, to_address, cc_address, bcc_address)
+                   AGAINST (#{keyword} IN BOOLEAN MODE) AS score
         FROM mail
         WHERE user_id = #{userId}
           AND is_deleted = 0
-          <if test="folder != null and folder != ''">
-              AND folder = #{folder}
-          </if>
-          AND MATCH(subject, plain_content, content, from_address, to_address, cc_address) AGAINST (#{keyword} IN BOOLEAN MODE)
+        <if test="folder != null and folder != ''">
+            <choose>
+                <when test="folder == 'starred'">
+                    AND is_starred = 1
+                </when>
+                <when test="folder == 'trash'">
+                    AND (folder = 'trash' OR folder LIKE 'trash:%')
+                </when>
+                <otherwise>
+                    AND folder = #{folder}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="accountId != null">
+            AND account_id = #{accountId}
+        </if>
+        AND MATCH(subject, plain_content, content, from_address, to_address, cc_address, bcc_address)
+            AGAINST (#{keyword} IN BOOLEAN MODE)
         ORDER BY score DESC, receive_time DESC, send_time DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>

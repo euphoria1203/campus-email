@@ -77,10 +77,11 @@ public class MailController {
     public ResponseEntity<List<Mail>> search(
         @RequestParam("keyword") String keyword,
         @RequestParam(value = "folder", required = false) String folder,
+        @RequestParam(value = "accountId", required = false) Long accountId,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size) {
         Long currentUserId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(mailService.search(currentUserId, keyword, folder, page, size));
+        return ResponseEntity.ok(mailService.search(currentUserId, keyword, folder, accountId, page, size));
     }
 
     /**

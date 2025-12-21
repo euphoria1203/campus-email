@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class MailServiceImpl implements MailService {
@@ -181,18 +183,19 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public List<Mail> search(Long userId, String keyword, String folder, int page, int size) {
-        if (!StringUtils.hasText(keyword)) {
-            return Collections.emptyList();
+    public List<Mail> search(Long userId, String keyword, String folder, Long accountId, int page, int size) {
+        if (!org.springframework.util.StringUtils.hasText(keyword)) {
+            return java.util.Collections.emptyList();
         }
         int pageSize = Math.min(Math.max(size, 1), 200);
         int offset = Math.max(page, 0) * pageSize;
         String query = keyword.trim();
         if (!query.contains("*")) {
-            query = query + "*"; // 前缀匹配，利用全文索引
+            query = query + "*";
         }
-        List<Mail> mails = mailMapper.search(userId, query, folder, pageSize, offset);
+        List<Mail> mails = mailMapper.search(userId, query, folder, accountId, pageSize, offset);
         sanitizeMailCollection(mails);
+        applyHighlight(mails, keyword.trim());
         return mails;
     }
 
@@ -434,6 +437,55 @@ public class MailServiceImpl implements MailService {
             return;
         }
         mails.forEach(this::sanitizeMailVisibility);
+    }
+
+    private void applyHighlight(List<Mail> mails, String keyword) {
+        if (mails == null || mails.isEmpty() || !StringUtils.hasText(keyword)) {
+            return;
+        }
+        Pattern pattern = Pattern.compile(Pattern.quote(keyword), Pattern.CASE_INSENSITIVE);
+        for (Mail mail : mails) {
+            String subject = Optional.ofNullable(mail.getSubject()).orElse("");
+            mail.setHighlightSubject(applyMarkup(subject, pattern, 120));
+
+            String body = Optional.ofNullable(mail.getPlainContent())
+                .orElse(Optional.ofNullable(mail.getContent()).orElse(""));
+            mail.setHighlightSnippet(buildSnippet(body, pattern, 200));
+        }
+    }
+
+    private String applyMarkup(String text, Pattern pattern, int maxLen) {
+        if (!StringUtils.hasText(text)) {
+            return "";
+        }
+        String limited = text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
+        Matcher matcher = pattern.matcher(limited);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, "<mark>" + Matcher.quoteReplacement(matcher.group()) + "</mark>");
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    private String buildSnippet(String text, Pattern pattern, int maxLen) {
+        if (!StringUtils.hasText(text)) {
+            return "";
+        }
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            int start = Math.max(0, matcher.start() - 40);
+            int end = Math.min(text.length(), matcher.end() + 60);
+            String snippet = text.substring(start, end);
+            if (start > 0) {
+                snippet = "..." + snippet;
+            }
+            if (end < text.length()) {
+                snippet = snippet + "...";
+            }
+            return applyMarkup(snippet, pattern, maxLen);
+        }
+        return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
     }
 
     private Mail requireOwnedMail(Long id, Long userId) {

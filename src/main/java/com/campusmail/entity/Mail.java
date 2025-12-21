@@ -26,4 +26,8 @@ public class Mail {
     private LocalDateTime receiveTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // 高亮展示用（不落库）
+    private String highlightSubject;
+    private String highlightSnippet;
 }
