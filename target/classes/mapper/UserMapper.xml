@@ -13,9 +13,9 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.campusmail.entity.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (username, password, email, nickname, status, created_at, updated_at)
-        VALUES (#{username}, #{passwordHash}, #{email}, #{nickname}, #{status}, #{createdAt}, #{updatedAt})
+    <insert id="insert" parameterType="com.campusmail.entity.User">
+        INSERT INTO user (id, username, password, email, nickname, status, created_at, updated_at)
+        VALUES (#{id}, #{username}, #{passwordHash}, #{email}, #{nickname}, #{status}, #{createdAt}, #{updatedAt})
     </insert>
 
     <select id="findByUsername" resultMap="UserResult">

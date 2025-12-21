@@ -18,8 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import com.campusmail.utils.SnowflakeIdGenerator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -30,19 +32,22 @@ public class UserServiceImpl implements UserService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final SnowflakeIdGenerator idGen;
 
     public UserServiceImpl(UserMapper userMapper,
                            MailAccountMapper mailAccountMapper,
                            PasswordEncoder passwordEncoder,
                            JwtService jwtService,
                            AuthenticationManager authenticationManager,
-                           UserDetailsService userDetailsService) {
+                           UserDetailsService userDetailsService,
+                           SnowflakeIdGenerator idGen) {
         this.userMapper = userMapper;
         this.mailAccountMapper = mailAccountMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
+        this.idGen = idGen;
     }
 
     @Override
@@ -50,6 +55,7 @@ public class UserServiceImpl implements UserService {
     public User register(UserRegisterDTO request) {
         // 创建用户
         User user = new User();
+        user.setId(idGen.nextId());
         user.setUsername(request.getUsername());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
@@ -61,6 +67,7 @@ public class UserServiceImpl implements UserService {
 
         // 创建默认邮件账户
         MailAccount mailAccount = new MailAccount();
+        mailAccount.setId(idGen.nextId());
         mailAccount.setUserId(user.getId());
         mailAccount.setEmailAddress(request.getEmail());
         mailAccount.setDisplayName(request.getUsername());
@@ -78,11 +85,17 @@ public class UserServiceImpl implements UserService {
             new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         
         UserDetails userDetails = userDetailsService.loadUserByUsername(authentication.getName());
-        String token = jwtService.generateToken(userDetails.getUsername(), Map.of("roles", userDetails.getAuthorities()));
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities().stream()
+            .map(a -> a.getAuthority())
+            .collect(Collectors.toList()));
         
         // 获取用户信息
         User user = userMapper.findByUsername(request.getUsername())
             .orElseThrow(() -> new RuntimeException("用户不存在"));
+        claims.put("userId", user.getId());
+
+        String token = jwtService.generateToken(userDetails.getUsername(), claims);
         
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);

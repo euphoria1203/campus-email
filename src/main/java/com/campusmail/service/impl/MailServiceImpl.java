@@ -7,10 +7,12 @@ import com.campusmail.entity.MailAccount;
 import com.campusmail.mapper.AttachmentMapper;
 import com.campusmail.mapper.MailAccountMapper;
 import com.campusmail.mapper.MailMapper;
+import com.campusmail.service.AttachmentService;
 import com.campusmail.service.MailService;
 import com.campusmail.smtp.ParsedMail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -31,27 +33,36 @@ public class MailServiceImpl implements MailService {
 
     private final MailMapper mailMapper;
     private final AttachmentMapper attachmentMapper;
+    private final AttachmentService attachmentService;
     private final MailAccountMapper mailAccountMapper;
 
-    public MailServiceImpl(MailMapper mailMapper, AttachmentMapper attachmentMapper, MailAccountMapper mailAccountMapper) {
+    public MailServiceImpl(MailMapper mailMapper,
+                           AttachmentMapper attachmentMapper,
+                           AttachmentService attachmentService,
+                           MailAccountMapper mailAccountMapper) {
         this.mailMapper = mailMapper;
         this.attachmentMapper = attachmentMapper;
+        this.attachmentService = attachmentService;
         this.mailAccountMapper = mailAccountMapper;
     }
 
     @Override
     @Transactional
-    public Mail sendMail(MailDTO request) {
+    public Mail sendMail(Long userId, MailDTO request) {
         assertRecipientsPresent(request.getToAddress(), request.getCcAddress(), request.getBccAddress());
 
-        MailAccount account = resolveMailAccount(request.getUserId(), request.getAccountId());
+        if (!Objects.equals(userId, request.getUserId())) {
+            request.setUserId(userId);
+        }
+
+        MailAccount account = resolveMailAccount(userId, request.getAccountId());
 
         String aggregatedRecipients = aggregateRecipients(
             request.getToAddress(), request.getCcAddress(), request.getBccAddress()
         );
 
         Mail mail = new Mail();
-        mail.setUserId(request.getUserId());
+        mail.setUserId(userId);
         mail.setAccountId(account.getId());
         mail.setFolder("sent");
         mail.setFromAddress(formatSenderAddress(account));
@@ -79,20 +90,48 @@ public class MailServiceImpl implements MailService {
 
         distributeToLocalRecipients(mail);
 
+        // 如果是从草稿编辑后发送，删除原草稿
+        if (request.getId() != null) {
+            mailMapper.findById(request.getId()).ifPresent(draft -> {
+                if ("drafts".equals(draft.getFolder())) {
+                    mailMapper.delete(request.getId());
+                    log.info("已删除原草稿: id={}", request.getId());
+                }
+            });
+        }
+
         log.info("邮件发送成功: id={}, from={}, to={}", mail.getId(), mail.getFromAddress(), mail.getToAddress());
         return mail;
     }
 
     @Override
     @Transactional
-    public Mail saveDraft(MailDTO request) {
-        MailAccount account = resolveMailAccount(request.getUserId(), request.getAccountId());
+    public Mail saveDraft(Long userId, MailDTO request) {
+        if (!Objects.equals(userId, request.getUserId())) {
+            request.setUserId(userId);
+        }
 
-        Mail mail = new Mail();
-        mail.setUserId(request.getUserId());
+        MailAccount account = resolveMailAccount(userId, request.getAccountId());
+
+        Mail mail;
+        boolean isUpdate = false;
+        
+        // 如果提供了ID，则更新现有草稿
+        if (request.getId() != null) {
+            mail = mailMapper.findById(request.getId())
+                .orElseThrow(() -> new RuntimeException("草稿不存在"));
+            isUpdate = true;
+        } else {
+            mail = new Mail();
+            mail.setUserId(userId);
+            mail.setIsRead(true);
+            mail.setIsStarred(false);
+            mail.setIsDeleted(false);
+        }
+
         mail.setAccountId(account.getId());
         mail.setFolder("drafts");
-        mail.setFromAddress(account.getEmailAddress());
+        mail.setFromAddress(formatSenderAddress(account));  // 使用格式化方法包含显示名称
         mail.setToAddress(aggregateRecipients(
             request.getToAddress(), request.getCcAddress(), request.getBccAddress()
         ));
@@ -101,15 +140,16 @@ public class MailServiceImpl implements MailService {
         mail.setSubject(request.getSubject());
         mail.setContent(request.getContent());
         mail.setPlainContent(request.getPlainContent());
-        mail.setIsRead(true);
-        mail.setIsStarred(false);
-        mail.setIsDeleted(false);
         mail.setHasAttachment(request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty());
         mail.setPriority(request.getPriority() != null ? request.getPriority() : 3);
         mail.setSendTime(null);
         mail.setReceiveTime(null);
 
-        mailMapper.insert(mail);
+        if (isUpdate) {
+            mailMapper.update(mail);
+        } else {
+            mailMapper.insert(mail);
+        }
 
         if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
             for (Long attachmentId : request.getAttachmentIds()) {
@@ -117,7 +157,7 @@ public class MailServiceImpl implements MailService {
             }
         }
 
-        log.info("草稿保存成功: id={}, userId={}", mail.getId(), mail.getUserId());
+        log.info("草稿{}成功: id={}, userId={}", isUpdate ? "更新" : "保存", mail.getId(), mail.getUserId());
         return mail;
     }
 
@@ -141,8 +181,25 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public Optional<Mail> getMailById(Long id) {
+    public List<Mail> search(Long userId, String keyword, String folder, int page, int size) {
+        if (!StringUtils.hasText(keyword)) {
+            return Collections.emptyList();
+        }
+        int pageSize = Math.min(Math.max(size, 1), 200);
+        int offset = Math.max(page, 0) * pageSize;
+        String query = keyword.trim();
+        if (!query.contains("*")) {
+            query = query + "*"; // 前缀匹配，利用全文索引
+        }
+        List<Mail> mails = mailMapper.search(userId, query, folder, pageSize, offset);
+        sanitizeMailCollection(mails);
+        return mails;
+    }
+
+    @Override
+    public Optional<Mail> getMailById(Long id, Long userId) {
         return mailMapper.findById(id)
+            .filter(mail -> Objects.equals(mail.getUserId(), userId))
             .map(mail -> {
                 sanitizeMailVisibility(mail);
                 return mail;
@@ -150,34 +207,42 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public void markAsRead(Long id) {
-        mailMapper.markAsRead(id);
+    public void markAsRead(Long id, Long userId) {
+        Mail mail = requireOwnedMail(id, userId);
+        mailMapper.markAsRead(mail.getId());
     }
 
     @Override
-    public void toggleStar(Long id) {
-        mailMapper.toggleStar(id);
+    public void toggleStar(Long id, Long userId) {
+        Mail mail = requireOwnedMail(id, userId);
+        mailMapper.toggleStar(mail.getId());
     }
 
     @Override
-    public void deleteMail(Long id) {
-        mailMapper.moveToTrash(id);
+    public void deleteMail(Long id, Long userId) {
+        Mail mail = requireOwnedMail(id, userId);
+        mailMapper.moveToTrash(mail.getId());
     }
 
     @Override
-    public void batchDeleteMails(List<Long> ids) {
+    public void batchDeleteMails(List<Long> ids, Long userId) {
         if (ids != null && !ids.isEmpty()) {
             for (Long id : ids) {
-                mailMapper.moveToTrash(id);
+                Mail mail = requireOwnedMail(id, userId);
+                mailMapper.moveToTrash(mail.getId());
             }
         }
     }
 
     @Override
     @Transactional
-    public void deletePermanently(List<Long> ids) {
+    public void deletePermanently(List<Long> ids, Long userId) {
         if (ids == null || ids.isEmpty()) {
             return;
+        }
+        for (Long id : ids) {
+            Mail mail = requireOwnedMail(id, userId);
+            attachmentService.deleteByMailId(mail.getId());
         }
         mailMapper.deletePermanently(ids);
         log.info("Permanently deleted mails: {}", ids);
@@ -185,12 +250,15 @@ public class MailServiceImpl implements MailService {
 
     @Override
     @Transactional
-    public void restoreMails(List<Long> ids) {
+    public void restoreMails(List<Long> ids, Long userId) {
         if (ids == null || ids.isEmpty()) {
             return;
         }
         for (Long id : ids) {
             mailMapper.findByIdIncludingDeleted(id).ifPresent(mail -> {
+                if (!Objects.equals(mail.getUserId(), userId)) {
+                    throw new AccessDeniedException("无权恢复该邮件");
+                }
                 if (!Boolean.TRUE.equals(mail.getIsDeleted())) {
                     return;
                 }
@@ -232,9 +300,8 @@ public class MailServiceImpl implements MailService {
 
     @Override
     @Transactional
-    public Mail sendDraft(Long mailId) {
-        Mail draft = mailMapper.findById(mailId)
-            .orElseThrow(() -> new RuntimeException("草稿不存在"));
+    public Mail sendDraft(Long userId, Long mailId) {
+        Mail draft = requireOwnedMail(mailId, userId);
 
         if (!"drafts".equalsIgnoreCase(draft.getFolder())) {
             throw new IllegalArgumentException("该邮件不是草稿");
@@ -242,7 +309,12 @@ public class MailServiceImpl implements MailService {
 
         assertRecipientsPresent(draft.getToAddress(), draft.getCcAddress(), draft.getBccAddress());
 
+        // 获取邮箱账号，格式化发件人地址以包含显示名称
+        MailAccount account = mailAccountMapper.findById(draft.getAccountId())
+            .orElseThrow(() -> new RuntimeException("邮箱账号不存在"));
+
         draft.setFolder("sent");
+        draft.setFromAddress(formatSenderAddress(account));  // 格式化发件人地址
         draft.setSendTime(LocalDateTime.now());
         draft.setIsDeleted(false);
         draft.setIsRead(true);
@@ -362,6 +434,15 @@ public class MailServiceImpl implements MailService {
             return;
         }
         mails.forEach(this::sanitizeMailVisibility);
+    }
+
+    private Mail requireOwnedMail(Long id, Long userId) {
+        Mail mail = mailMapper.findByIdIncludingDeleted(id)
+            .orElseThrow(() -> new RuntimeException("邮件不存在"));
+        if (!Objects.equals(mail.getUserId(), userId)) {
+            throw new AccessDeniedException("无权访问该邮件");
+        }
+        return mail;
     }
 
     private void sanitizeMailVisibility(Mail mail) {

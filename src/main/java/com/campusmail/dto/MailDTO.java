@@ -6,6 +6,7 @@ import java.util.List;
 
 @Data
 public class MailDTO {
+    private Long id;  // 草稿ID，用于更新现有草稿
     private Long userId;
     private Long accountId;
     private String toAddress;

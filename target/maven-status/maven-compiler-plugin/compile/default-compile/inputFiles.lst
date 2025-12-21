@@ -30,10 +30,12 @@ E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\se
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\impl\ContactServiceImpl.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\impl\MailAccountServiceImpl.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\impl\MailServiceImpl.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\impl\OutboundMailSenderImpl.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\impl\UserServiceImpl.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\JwtService.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\MailAccountService.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\MailService.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\OutboundMailSender.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\service\UserService.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\MailParser.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\ParsedMail.java
@@ -42,4 +44,9 @@ E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\sm
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\SMTPResponse.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\SMTPServer.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\SMTPSession.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\AuthenticatedUser.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\AuthUser.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\JwtAuthenticationFilter.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\SecurityUtil.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\SecurityUtils.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\SnowflakeIdGenerator.java

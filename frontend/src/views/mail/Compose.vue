@@ -83,7 +83,7 @@
 
 <script setup>
 import { ref, reactive, onBeforeUnmount, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Promotion } from '@element-plus/icons-vue'
 import RichEditor from '@/components/RichEditor.vue'
@@ -92,12 +92,15 @@ import AttachmentUpload from '@/components/AttachmentUpload.vue'
 import { mailApi, mailAccountApi } from '@/api/mail'
 
 const router = useRouter()
+const route = useRoute()
 
 const editorRef = ref(null)
 const attachmentRef = ref(null)
 const showCcBcc = ref(false)
 const sending = ref(false)
 const saving = ref(false)
+const draftId = ref(null) // 正在编辑的草稿ID
+const forwardId = ref(null) // 正在转发的邮件ID
 
 // 发件邮箱账号列表与当前选择
 const mailAccounts = ref([])
@@ -173,7 +176,8 @@ const sendMail = async () => {
       subject: mail.subject || '(无主题)',
       content: mail.body,
       plainContent: mail.body ? mail.body.replace(/<[^>]*>/g, '') : '',
-      attachmentIds: attachmentIds
+      attachmentIds: attachmentIds,
+      id: draftId.value // 如果是编辑草稿后发送，携带草稿ID
     }
 
     await mailApi.send(mailData)
@@ -215,6 +219,11 @@ const saveDraft = async () => {
       attachmentIds
     }
 
+    // 如果是编辑草稿，附加草稿ID
+    if (draftId.value) {
+      mailData.id = draftId.value
+    }
+
     await mailApi.saveDraft(mailData)
 
     // 同步一份本地备份，避免意外关闭浏览器导致内容丢失
@@ -223,7 +232,7 @@ const saveDraft = async () => {
       savedAt: new Date().toISOString()
     }))
 
-    ElMessage.success('草稿已保存到服务器')
+    ElMessage.success(draftId.value ? '草稿已更新' : '草稿已保存到服务器')
     router.push('/drafts')
   } catch (error) {
     console.error('保存草稿失败', error)
@@ -319,8 +328,116 @@ startAutoSave()
     }
   }
 
-  onMounted(() => {
-    loadMailAccounts()
+  // 加载草稿内容
+  const loadDraft = async (id) => {
+    try {
+      const response = await mailApi.get(id)
+      const draft = response.mail
+      
+      // 填充表单
+      mail.to = draft.toAddress ? draft.toAddress.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []
+      mail.cc = draft.ccAddress ? draft.ccAddress.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []
+      mail.bcc = draft.bccAddress ? draft.bccAddress.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []
+      mail.subject = draft.subject || ''
+      mail.body = draft.content || draft.plainContent || ''
+      
+      // 如果有抄送或密送，显示这些字段
+      if (mail.cc.length > 0 || mail.bcc.length > 0) {
+        showCcBcc.value = true
+      }
+      
+      // 设置发件账号
+      if (draft.accountId) {
+        selectedAccountId.value = draft.accountId
+      }
+      
+      // 加载附件列表
+      if (response.attachments && response.attachments.length > 0) {
+        // 将附件信息转换为前端格式（保留附件ID以便关联）
+        attachments.value = response.attachments.map(att => ({
+          id: att.id,
+          name: att.fileName,
+          size: att.fileSize,
+          status: 'success',
+          // 标记为已存在的附件，避免重复上传
+          existing: true
+        }))
+      }
+      
+      draftId.value = id
+      ElMessage.success('草稿已加载')
+    } catch (error) {
+      console.error('加载草稿失败:', error)
+      ElMessage.error('加载草稿失败')
+    }
+  }
+
+  // 加载转发内容
+  const loadForward = async (id) => {
+    try {
+      const response = await mailApi.get(id)
+      const original = response.mail
+
+      // 清空收件人，用户自行填写
+      mail.to = []
+      mail.cc = []
+      mail.bcc = []
+
+      // 主题加前缀
+      const origSubject = original.subject || '(无主题)'
+      mail.subject = origSubject.startsWith('转发:') ? origSubject : `转发: ${origSubject}`
+
+      // 构造转发正文，附带原邮件信息
+      const formatDateForQuote = (time) => {
+        if (!time) return ''
+        return new Date(time).toLocaleString('zh-CN', { hour12: false })
+      }
+
+      const meta = [
+        `发件人: ${original.fromAddress || ''}`,
+        `发送时间: ${formatDateForQuote(original.sendTime || original.receiveTime)}`,
+        `收件人: ${original.toAddress || ''}`,
+        original.ccAddress ? `抄送: ${original.ccAddress}` : null
+      ].filter(Boolean).join('<br/>')
+
+      const originalBody = original.content || original.plainContent || ''
+
+      mail.body = `
+        <p></p>
+        <hr/>
+        <p>---------- 转发的邮件 ----------</p>
+        <p>${meta}</p>
+        <br/>
+        ${originalBody}
+      `
+
+      // 不自动附带附件，用户可自行重新添加
+      attachments.value = []
+
+      forwardId.value = id
+      draftId.value = null // 确保不会当作草稿更新
+      ElMessage.success('已加载转发内容')
+    } catch (error) {
+      console.error('加载转发内容失败:', error)
+      ElMessage.error('加载转发内容失败')
+    }
+  }
+
+  onMounted(async () => {
+    await loadMailAccounts()
+    
+    const queryDraftId = route.query.draftId
+    const queryForwardId = route.query.forwardId
+
+    if (queryDraftId) {
+      await loadDraft(queryDraftId)
+      return
+    }
+
+    if (queryForwardId) {
+      await loadForward(queryForwardId)
+      return
+    }
   })
 </script>
 

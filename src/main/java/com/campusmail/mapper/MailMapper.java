@@ -39,6 +39,12 @@ public interface MailMapper {
 
     void deletePermanently(@Param("ids") List<Long> ids);
 
+    List<Mail> search(@Param("userId") Long userId,
+                      @Param("keyword") String keyword,
+                      @Param("folder") String folder,
+                      @Param("limit") int limit,
+                      @Param("offset") int offset);
+
     // 统计未读邮件数量
     int countUnreadByUserId(@Param("userId") Long userId);
 

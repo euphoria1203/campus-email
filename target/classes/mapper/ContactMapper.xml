@@ -10,9 +10,9 @@
         <result property="notes" column="notes"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.campusmail.entity.Contact" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO contact (user_id, contact_name, email, phone, notes)
-        VALUES (#{userId}, #{contactName}, #{email}, #{phone}, #{notes})
+    <insert id="insert" parameterType="com.campusmail.entity.Contact">
+        INSERT INTO contact (id, user_id, contact_name, email, phone, notes)
+        VALUES (#{id}, #{userId}, #{contactName}, #{email}, #{phone}, #{notes})
     </insert>
 
     <update id="update" parameterType="com.campusmail.entity.Contact">
@@ -24,6 +24,10 @@
     <delete id="delete">
         DELETE FROM contact WHERE id = #{id}
     </delete>
+
+    <select id="findById" resultMap="ContactResult">
+        SELECT * FROM contact WHERE id = #{id}
+    </select>
 
     <select id="findByUserId" resultMap="ContactResult">
         SELECT * FROM contact WHERE user_id = #{userId}

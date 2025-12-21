@@ -73,7 +73,7 @@
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
-              <el-dropdown-menu>
+              <el-dropdown-menu class="user-dropdown-menu">
                 <!-- 邮箱账号切换区域 -->
                 <el-dropdown-item disabled class="section-title">
                   <span>切换邮箱账号</span>
@@ -83,22 +83,23 @@
                   :key="account.id"
                   :command="'account-' + account.id"
                   :class="{ 'is-active': account.id === currentAccountId }"
+                  class="account-dropdown-item"
                 >
                   <div class="account-item">
-                    <el-avatar :size="24" :style="{ background: getAccountColor(account.id) }">
+                    <el-avatar :size="28" :style="{ background: getAccountColor(account.id) }">
                       {{ account.emailAddress.charAt(0).toUpperCase() }}
                     </el-avatar>
                     <span class="account-email">{{ account.emailAddress }}</span>
                     <el-tag v-if="account.isDefault" size="small" type="success">默认</el-tag>
                   </div>
                 </el-dropdown-item>
-                <el-dropdown-item divided command="manage">
+                <el-dropdown-item divided command="manage" class="action-item">
                   <el-icon><Setting /></el-icon>
-                  管理邮箱账号
+                  <span>管理邮箱账号</span>
                 </el-dropdown-item>
-                <el-dropdown-item command="logout">
+                <el-dropdown-item command="logout" class="action-item">
                   <el-icon><SwitchButton /></el-icon>
-                  退出登录
+                  <span>退出登录</span>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -388,25 +389,79 @@ const handleGlobalRefresh = async () => {
   }
 }
 
-// 下拉菜单样式
-:deep(.section-title) {
-  font-size: 12px;
-  color: #909399;
-  cursor: default;
-}
+// 下拉菜单样式优化
+:deep(.user-dropdown-menu) {
+  min-width: 280px;
+  padding: 8px 0;
 
-:deep(.account-item) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
-  .account-email {
-    flex: 1;
+  .el-dropdown-menu__item {
+    padding: 0;
+    height: auto;
+    line-height: normal;
+
+    &.section-title {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #909399;
+      cursor: default;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    &.account-dropdown-item {
+      padding: 10px 16px;
+      
+      &:hover {
+        background-color: #f5f7fa;
+      }
+
+      &.is-active {
+        background-color: #ecf5ff;
+        
+        .account-item .account-email {
+          color: #409EFF;
+          font-weight: 500;
+        }
+      }
+    }
+
+    &.action-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .el-icon {
+        font-size: 16px;
+      }
+
+      span {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background-color: #f5f7fa;
+        color: #409EFF;
+      }
+    }
   }
-}
 
-:deep(.el-dropdown-menu__item.is-active) {
-  background-color: #ecf5ff;
-  color: #409EFF;
+  .account-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    
+    .account-email {
+      flex: 1;
+      font-size: 14px;
+      color: #303133;
+    }
+
+    .el-tag {
+      flex-shrink: 0;
+    }
+  }
 }
 </style>

@@ -12,8 +12,8 @@
         <el-button :icon="ArrowLeft" @click="$router.back()">返回</el-button>
         <el-button-group>
           <el-button :icon="Delete" @click="handleDelete">删除</el-button>
-          <el-button :icon="FolderOpened">移动</el-button>
           <el-button :icon="Printer" @click="handlePrint">打印</el-button>
+            <el-button :icon="Promotion" type="primary" @click="handleForward">转发</el-button>
         </el-button-group>
         <div class="nav-buttons">
           <el-button :icon="ArrowUp" circle />
@@ -87,9 +87,13 @@
           <el-alert
             type="info"
             :closable="false"
-            title="这是草稿，确认内容无误后即可发送"
+            title="这是草稿，可以继续编辑或直接发送"
           />
           <div class="draft-buttons">
+            <el-button
+              :icon="Edit"
+              @click="handleEditDraft"
+            >编辑草稿</el-button>
             <el-button
               type="primary"
               :icon="Promotion"
@@ -126,8 +130,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
-  ArrowLeft, Delete, FolderOpened, Printer, ArrowUp, ArrowDown,
-  Star, StarFilled, Paperclip, Document, Download, Promotion, Loading, Plus
+  ArrowLeft, Delete, Printer, ArrowUp, ArrowDown,
+  Star, StarFilled, Paperclip, Document, Download, Promotion, Loading, Plus, Edit
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { mailApi, attachmentApi, contactApi } from '@/api/mail'
@@ -297,6 +301,14 @@ const handleDelete = async () => {
   }
 }
 
+// 转发
+const handleForward = () => {
+  router.push({
+    path: '/compose',
+    query: { forwardId: mailId }
+  })
+}
+
 // 打印
 const handlePrint = () => {
   window.print()
@@ -351,6 +363,15 @@ const handleReply = async () => {
   } finally {
     sending.value = false
   }
+}
+
+const handleEditDraft = () => {
+  if (!mail.value) return
+  // 跳转到写邮件页面并传递草稿ID
+  router.push({
+    path: '/compose',
+    query: { draftId: mail.value.id }
+  })
 }
 
 const handleSendDraft = async () => {
@@ -538,6 +559,8 @@ onMounted(() => {
 
   .draft-buttons {
     margin-top: 12px;
+    display: flex;
+    gap: 12px;
   }
 }
 

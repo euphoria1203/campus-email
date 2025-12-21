@@ -10,9 +10,9 @@
         <result property="storagePath" column="storage_path"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.campusmail.entity.Attachment" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO attachment (mail_id, file_name, file_type, file_size, storage_path)
-        VALUES (#{mailId}, #{fileName}, #{fileType}, #{fileSize}, #{storagePath})
+    <insert id="insert" parameterType="com.campusmail.entity.Attachment">
+        INSERT INTO attachment (id, mail_id, file_name, file_type, file_size, storage_path)
+        VALUES (#{id}, #{mailId}, #{fileName}, #{fileType}, #{fileSize}, #{storagePath})
     </insert>
 
     <insert id="batchInsert" parameterType="java.util.List">

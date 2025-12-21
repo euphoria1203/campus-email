@@ -5,11 +5,11 @@ import com.campusmail.entity.Contact;
 import java.util.List;
 
 public interface ContactService {
-    Contact create(Contact contact);
+    Contact create(Long userId, Contact contact);
 
-    Contact update(Contact contact);
+    Contact update(Long userId, Contact contact);
 
-    void delete(Long id);
+    void delete(Long userId, Long id);
 
     List<Contact> listByUser(Long userId);
 

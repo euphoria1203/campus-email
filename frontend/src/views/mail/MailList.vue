@@ -16,7 +16,6 @@
             @click="handleRestore"
             :disabled="selectedMails.length === 0"
           >移出垃圾箱</el-button>
-          <el-button v-else :icon="FolderOpened" disabled>移动</el-button>
         </el-button-group>
         
         <!-- 邮箱账号切换器 -->
@@ -142,7 +141,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { 
-  Refresh, Delete, FolderOpened, Search, Star, StarFilled, Paperclip, Loading, Message
+  Refresh, Delete, Search, Star, StarFilled, Paperclip, Loading, Message, FolderOpened
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { mailApi, mailAccountApi } from '@/api/mail'

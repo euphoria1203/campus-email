@@ -3,6 +3,7 @@ package com.campusmail.service.impl;
 import com.campusmail.entity.Attachment;
 import com.campusmail.mapper.AttachmentMapper;
 import com.campusmail.service.AttachmentService;
+import com.campusmail.utils.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -26,11 +27,14 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     private final AttachmentMapper attachmentMapper;
     private final Path uploadPath;
+    private final SnowflakeIdGenerator idGen;
 
     public AttachmentServiceImpl(AttachmentMapper attachmentMapper,
-                                  @Value("${file.upload-dir:./uploads}") String uploadDir) {
+                                  @Value("${file.upload-dir:./uploads}") String uploadDir,
+                                  SnowflakeIdGenerator idGen) {
         this.attachmentMapper = attachmentMapper;
         this.uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.idGen = idGen;
 
         try {
             Files.createDirectories(this.uploadPath);
@@ -55,6 +59,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             Attachment attachment = new Attachment();
+            attachment.setId(idGen.nextId());
             attachment.setMailId(mailId);
             attachment.setFileName(originalFileName);
             attachment.setFileType(file.getContentType());

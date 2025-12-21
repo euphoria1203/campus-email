@@ -14,6 +14,8 @@ public interface ContactMapper {
 
     void delete(@Param("id") Long id);
 
+    java.util.Optional<Contact> findById(@Param("id") Long id);
+
     List<Contact> findByUserId(@Param("userId") Long userId);
 
     /**

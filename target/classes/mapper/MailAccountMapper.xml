@@ -12,9 +12,9 @@
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.campusmail.entity.MailAccount" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO mail_account (user_id, email_address, display_name, smtp_host, smtp_port, is_default)
-        VALUES (#{userId}, #{emailAddress}, #{displayName}, #{smtpHost}, #{smtpPort}, #{isDefault})
+    <insert id="insert" parameterType="com.campusmail.entity.MailAccount">
+        INSERT INTO mail_account (id, user_id, email_address, display_name, smtp_host, smtp_port, is_default)
+        VALUES (#{id}, #{userId}, #{emailAddress}, #{displayName}, #{smtpHost}, #{smtpPort}, #{isDefault})
     </insert>
 
     <update id="update" parameterType="com.campusmail.entity.MailAccount">

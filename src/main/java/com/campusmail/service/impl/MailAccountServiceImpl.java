@@ -3,8 +3,10 @@ package com.campusmail.service.impl;
 import com.campusmail.entity.MailAccount;
 import com.campusmail.mapper.MailAccountMapper;
 import com.campusmail.service.MailAccountService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.campusmail.utils.SnowflakeIdGenerator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,14 +15,18 @@ import java.util.List;
 public class MailAccountServiceImpl implements MailAccountService {
 
     private final MailAccountMapper mailAccountMapper;
+    private final SnowflakeIdGenerator idGen;
 
-    public MailAccountServiceImpl(MailAccountMapper mailAccountMapper) {
+    public MailAccountServiceImpl(MailAccountMapper mailAccountMapper, SnowflakeIdGenerator idGen) {
         this.mailAccountMapper = mailAccountMapper;
+        this.idGen = idGen;
     }
 
     @Override
     @Transactional
-    public MailAccount create(MailAccount account) {
+    public MailAccount create(Long userId, MailAccount account) {
+        account.setUserId(userId);
+        account.setId(idGen.nextId());
         account.setCreatedAt(LocalDateTime.now());
         normalizeDefault(account);
         mailAccountMapper.insert(account);
@@ -30,11 +36,13 @@ public class MailAccountServiceImpl implements MailAccountService {
 
     @Override
     @Transactional
-    public MailAccount update(MailAccount account) {
-        // 确保有 userId（从数据库获取原记录）
+    public MailAccount update(Long userId, MailAccount account) {
         MailAccount existing = mailAccountMapper.findById(account.getId()).orElse(null);
         if (existing == null) {
             throw new RuntimeException("邮箱账号不存在");
+        }
+        if (!existing.getUserId().equals(userId)) {
+            throw new AccessDeniedException("无权修改该邮箱账号");
         }
         account.setUserId(existing.getUserId());
         normalizeDefault(account);
@@ -45,10 +53,13 @@ public class MailAccountServiceImpl implements MailAccountService {
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long userId, Long id) {
         MailAccount existing = mailAccountMapper.findById(id).orElse(null);
         if (existing == null) {
             return;
+        }
+        if (!existing.getUserId().equals(userId)) {
+            throw new AccessDeniedException("无权删除该邮箱账号");
         }
         mailAccountMapper.delete(id);
 

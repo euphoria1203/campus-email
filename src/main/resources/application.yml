@@ -1,6 +1,17 @@
 spring:
   application:
     name: campus-mail
+  mail:
+    host: localhost
+    port: 2525
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
   datasource:
     url: jdbc:mysql://localhost:3306/campus_mail?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
     username: root

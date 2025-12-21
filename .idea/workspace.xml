@@ -5,7 +5,86 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f9b2b62d-79ff-46a0-bd8c-42b3f0e503a6" name="更改" comment="简易的邮箱系统V1.0">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vue-global-types/vue_99_0.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vue-global-types/vue_99_0.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/layouts/MainLayout.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/layouts/MainLayout.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/mail/Compose.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/mail/Compose.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/mail/MailDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/mail/MailDetail.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/mail/MailList.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/mail/MailList.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/config/MyBatisConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/config/MyBatisConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/controller/ContactController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/controller/ContactController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/controller/MailAccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/controller/MailAccountController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/controller/MailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/controller/MailController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/dto/MailDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/dto/MailDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/mapper/ContactMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/mapper/ContactMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/mapper/MailMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/mapper/MailMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/ContactService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/ContactService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/MailAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/MailAccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/MailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/MailService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/AttachmentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/AttachmentServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/ContactServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/ContactServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/MailAccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/MailAccountServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/MailServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/MailServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/UserServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/service/impl/UserServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/campusmail/utils/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/campusmail/utils/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/AttachmentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/AttachmentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/ContactMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/ContactMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/MailAccountMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/MailAccountMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/MailMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/MailMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/UserMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/UserMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/campus-mail-0.0.1-SNAPSHOT.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/CampusMailApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/CampusMailApplication.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/config/JwtAuthenticationEntryPoint.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/config/JwtAuthenticationEntryPoint.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/config/MyBatisConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/config/MyBatisConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/config/RedisConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/config/RedisConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/config/SecurityConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/config/security/CustomUserDetailsService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/config/security/CustomUserDetailsService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/controller/AttachmentController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/controller/AttachmentController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/controller/AuthController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/controller/AuthController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/controller/ContactController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/controller/ContactController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/controller/MailAccountController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/controller/MailAccountController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/controller/MailController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/controller/MailController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/dto/AttachmentDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/dto/AttachmentDTO.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/dto/MailDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/dto/MailDTO.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/dto/UserLoginDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/dto/UserLoginDTO.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/dto/UserRegisterDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/dto/UserRegisterDTO.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/entity/Attachment.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/entity/Attachment.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/entity/Contact.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/entity/Contact.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/entity/Mail.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/entity/Mail.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/entity/MailAccount.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/entity/MailAccount.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/entity/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/entity/User.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/mapper/ContactMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/mapper/ContactMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/mapper/MailMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/mapper/MailMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/ContactService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/ContactService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/JwtService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/JwtService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/MailAccountService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/MailAccountService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/MailService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/MailService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/AttachmentServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/AttachmentServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/ContactServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/ContactServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailAccountServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailAccountServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailServiceImpl$RecipientInfo.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailServiceImpl$RecipientInfo.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailServiceImpl$RecipientType.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailServiceImpl$RecipientType.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/MailServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/UserServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/service/impl/UserServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/MailParser.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/MailParser.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/ParsedMail.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/ParsedMail.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPContext$State.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPContext$State.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPContext.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPContext.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPResponse.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPResponse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPServer.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPServer.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPSession.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/smtp/SMTPSession.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/campusmail/utils/JwtAuthenticationFilter.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/campusmail/utils/JwtAuthenticationFilter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/mapper/AttachmentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/mapper/AttachmentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/mapper/ContactMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/mapper/ContactMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/mapper/MailAccountMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/mapper/MailAccountMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/mapper/MailMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/mapper/MailMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/mapper/UserMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/mapper/UserMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-archiver/pom.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,20 +92,25 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "euphoria1203"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;euphoria1203&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/euphoria1203/campus-email.git",
-    "accountId": "7e21b95c-d6b2-41e2-b305-8ff4f59a6bf0"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/euphoria1203/campus-email.git&quot;,
+    &quot;accountId&quot;: &quot;7e21b95c-d6b2-41e2-b305-8ff4f59a6bf0&quot;
   }
-}]]></component>
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="QODANA_PROBLEMS_VIEW_TAB" />
   </component>
@@ -38,40 +122,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Spring Boot.CampusMailApplication.executor": "Run",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "E:/code/Java/网络系统实践项目/CampusMail",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "模块",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "to.speed.mode.migration.done": "true",
-    "ts.external.directory.path": "E:\\software\\IntelliJ IDEA 2025.1.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.CampusMailApplication.executor&quot;: &quot;Run&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/code/Java/网络系统实践项目/CampusMail&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;模块&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.24252874&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;E:\\software\\IntelliJ IDEA 2025.1.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql_aurora"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql_aurora&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -117,6 +201,9 @@
       <workItem from="1764464405402" duration="18787000" />
       <workItem from="1764665156648" duration="11334000" />
       <workItem from="1764747201465" duration="3714000" />
+      <workItem from="1765778029543" duration="3000" />
+      <workItem from="1765779002603" duration="41000" />
+      <workItem from="1766297056883" duration="2715000" />
     </task>
     <task id="LOCAL-00001" summary="简易的邮箱系统V1.0">
       <option name="closed" value="true" />

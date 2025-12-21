@@ -5,6 +5,7 @@ import com.campusmail.entity.Attachment;
 import com.campusmail.entity.Mail;
 import com.campusmail.mapper.AttachmentMapper;
 import com.campusmail.service.MailService;
+import com.campusmail.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/mails")
@@ -30,7 +32,9 @@ public class MailController {
      */
     @PostMapping
     public ResponseEntity<Mail> send(@Valid @RequestBody MailDTO request) {
-        return ResponseEntity.ok(mailService.sendMail(request));
+        Long userId = SecurityUtils.getCurrentUserId();
+        request.setUserId(userId);
+        return ResponseEntity.ok(mailService.sendMail(userId, request));
     }
 
     /**
@@ -38,7 +42,9 @@ public class MailController {
      */
     @PostMapping("/drafts")
     public ResponseEntity<Mail> saveDraft(@RequestBody MailDTO request) {
-        return ResponseEntity.ok(mailService.saveDraft(request));
+        Long userId = SecurityUtils.getCurrentUserId();
+        request.setUserId(userId);
+        return ResponseEntity.ok(mailService.saveDraft(userId, request));
     }
 
     /**
@@ -46,7 +52,8 @@ public class MailController {
      */
     @PostMapping("/drafts/{id}/send")
     public ResponseEntity<Mail> sendDraft(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(mailService.sendDraft(id));
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(mailService.sendDraft(userId, id));
     }
 
     /**
@@ -56,7 +63,24 @@ public class MailController {
     public ResponseEntity<List<Mail>> listByUser(
             @PathVariable("userId") Long userId,
             @RequestParam(value = "folder", required = false) String folder) {
-        return ResponseEntity.ok(mailService.listMails(userId, folder));
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (!Objects.equals(currentUserId, userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(mailService.listMails(currentUserId, folder));
+    }
+
+    /**
+     * 全文搜索邮件
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Mail>> search(
+        @RequestParam("keyword") String keyword,
+        @RequestParam(value = "folder", required = false) String folder,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "20") int size) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(mailService.search(currentUserId, keyword, folder, page, size));
     }
 
     /**
@@ -64,10 +88,11 @@ public class MailController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getMailDetail(@PathVariable("id") Long id) {
-        return mailService.getMailById(id)
+        Long userId = SecurityUtils.getCurrentUserId();
+        return mailService.getMailById(id, userId)
             .map(mail -> {
                 // 标记为已读
-                mailService.markAsRead(id);
+                mailService.markAsRead(id, userId);
                 mail.setIsRead(true);
                 
                 // 获取附件列表
@@ -86,7 +111,8 @@ public class MailController {
      */
     @PutMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable("id") Long id) {
-        mailService.markAsRead(id);
+        Long userId = SecurityUtils.getCurrentUserId();
+        mailService.markAsRead(id, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -95,7 +121,8 @@ public class MailController {
      */
     @PutMapping("/{id}/star")
     public ResponseEntity<Void> toggleStar(@PathVariable("id") Long id) {
-        mailService.toggleStar(id);
+        Long userId = SecurityUtils.getCurrentUserId();
+        mailService.toggleStar(id, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -104,7 +131,8 @@ public class MailController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMail(@PathVariable("id") Long id) {
-        mailService.deleteMail(id);
+        Long userId = SecurityUtils.getCurrentUserId();
+        mailService.deleteMail(id, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -113,7 +141,8 @@ public class MailController {
      */
     @DeleteMapping("/batch")
     public ResponseEntity<Void> batchDelete(@RequestBody List<Long> ids) {
-        mailService.batchDeleteMails(ids);
+        Long userId = SecurityUtils.getCurrentUserId();
+        mailService.batchDeleteMails(ids, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -122,7 +151,8 @@ public class MailController {
      */
     @DeleteMapping("/trash")
     public ResponseEntity<Void> deletePermanently(@RequestBody List<Long> ids) {
-        mailService.deletePermanently(ids);
+        Long userId = SecurityUtils.getCurrentUserId();
+        mailService.deletePermanently(ids, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -131,7 +161,8 @@ public class MailController {
      */
     @PutMapping("/trash/restore")
     public ResponseEntity<Void> restoreFromTrash(@RequestBody List<Long> ids) {
-        mailService.restoreMails(ids);
+        Long userId = SecurityUtils.getCurrentUserId();
+        mailService.restoreMails(ids, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -140,7 +171,11 @@ public class MailController {
      */
     @GetMapping("/stats/{userId}")
     public ResponseEntity<Map<String, Integer>> getMailStats(@PathVariable("userId") Long userId) {
-        Map<String, Integer> stats = mailService.getMailStats(userId);
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (!Objects.equals(currentUserId, userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        Map<String, Integer> stats = mailService.getMailStats(currentUserId);
         return ResponseEntity.ok(stats);
     }
 }
