@@ -43,6 +43,11 @@
           <el-badge v-if="draftsCount > 0" :value="draftsCount" class="folder-badge" type="info" />
         </el-menu-item>
 
+        <el-menu-item index="scheduled">
+          <el-icon><Clock /></el-icon>
+          <span>定时发送</span>
+        </el-menu-item>
+
         <el-menu-item index="trash">
           <el-icon><Delete /></el-icon>
           <span>垃圾箱</span>
@@ -117,9 +122,10 @@
 
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import { 
-  Message, Edit, MessageBox, Promotion, Document, Delete, SwitchButton, ArrowDown, User, StarFilled, Setting
+  Message, Edit, MessageBox, Promotion, Document, Delete, SwitchButton, ArrowDown, User, StarFilled, Setting, Clock
 } from '@element-plus/icons-vue'
 import { mailApi, mailAccountApi } from '@/api/mail'
 
@@ -134,6 +140,11 @@ const isRefreshing = ref(false)
 // 邮箱账号相关
 const mailAccounts = ref([])
 const currentAccountId = ref(null)
+
+const scheduledQueueKey = 'scheduledSendQueue'
+const scheduleCheckIntervalMs = 30000
+const isCheckingScheduled = ref(false)
+let scheduleTimer = null
 
 // 账号颜色
 const accountColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#00BCD4', '#9C27B0']
@@ -193,7 +204,7 @@ const loadMailAccounts = async () => {
     if (userId) {
       const data = await mailAccountApi.listByUser(userId)
       mailAccounts.value = Array.isArray(data) ? data : []
-      // ???????????????
+      // 确保当前账号存在，必要时回落到默认账号
       const defaultAccount = mailAccounts.value.find(a => a.isDefault)
       const currentId = currentAccountId.value
       const currentExists = currentId
@@ -213,7 +224,7 @@ const loadMailAccounts = async () => {
       }
     }
   } catch (error) {
-    console.error('????????:', error)
+    console.error('加载邮箱账号失败:', error)
   }
 }
 
@@ -227,6 +238,68 @@ const handleAccountSwitchEvent = (event) => {
     localStorage.removeItem('currentAccountId')
   }
   loadMailAccounts()
+}
+
+const readScheduledQueue = () => {
+  try {
+    const raw = localStorage.getItem(scheduledQueueKey)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+const writeScheduledQueue = (queue) => {
+  if (!queue || queue.length === 0) {
+    localStorage.removeItem(scheduledQueueKey)
+    return
+  }
+  localStorage.setItem(scheduledQueueKey, JSON.stringify(queue))
+}
+
+const checkScheduledQueue = async () => {
+  const userId = localStorage.getItem('userId')
+  if (!userId || isCheckingScheduled.value) {
+    return
+  }
+  const queue = readScheduledQueue()
+  if (queue.length === 0) {
+    return
+  }
+  isCheckingScheduled.value = true
+  try {
+    const scheduledList = await mailApi.list(userId, 'scheduled')
+    const scheduledIds = new Set(
+      (Array.isArray(scheduledList) ? scheduledList : []).map(item => item.id)
+    )
+    const pending = []
+    for (const item of queue) {
+      if (!item?.id) {
+        continue
+      }
+      if (scheduledIds.has(item.id)) {
+        pending.push(item)
+        continue
+      }
+      try {
+        const detail = await mailApi.get(item.id)
+        const mail = detail?.mail
+        if (mail?.folder === 'sent') {
+          const subject = mail.subject || item.subject || '(无主题)'
+          ElMessage.success(`定时邮件已发送：${subject}`)
+        }
+      } catch (error) {
+        const status = error?.response?.status
+        if (status !== 404 && status !== 403) {
+          pending.push(item)
+        }
+      }
+    }
+    writeScheduledQueue(pending)
+  } finally {
+    isCheckingScheduled.value = false
+  }
 }
 
 // 处理下拉菜单命令
@@ -256,11 +329,17 @@ onMounted(() => {
   }
   fetchMailStats()
   loadMailAccounts()
+  checkScheduledQueue()
+  scheduleTimer = setInterval(checkScheduledQueue, scheduleCheckIntervalMs)
   window.addEventListener('account-switch', handleAccountSwitchEvent)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('account-switch', handleAccountSwitchEvent)
+  if (scheduleTimer) {
+    clearInterval(scheduleTimer)
+    scheduleTimer = null
+  }
 })
 
 // 监听路由变化，刷新统计信息
@@ -279,6 +358,7 @@ const handleLogout = () => {
   localStorage.removeItem('email')
   localStorage.removeItem('nickname')
   localStorage.removeItem('currentAccountId')
+  localStorage.removeItem(scheduledQueueKey)
   router.push('/login')
 }
 

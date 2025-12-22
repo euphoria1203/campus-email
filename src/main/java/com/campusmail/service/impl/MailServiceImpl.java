@@ -14,11 +14,14 @@ import com.campusmail.smtp.ParsedMail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -337,6 +340,67 @@ public class MailServiceImpl implements MailService {
 
     @Override
     @Transactional
+    public Mail scheduleMail(Long userId, MailDTO request) {
+        assertRecipientsPresent(request.getToAddress(), request.getCcAddress(), request.getBccAddress());
+        if (!Objects.equals(userId, request.getUserId())) {
+            request.setUserId(userId);
+        }
+
+        LocalDateTime scheduledTime = parseScheduledTime(request.getScheduledTime());
+        if (scheduledTime == null) {
+            throw new IllegalArgumentException("scheduledTime is required");
+        }
+        if (scheduledTime.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("scheduledTime must be in the future");
+        }
+
+        MailAccount account = resolveMailAccount(userId, request.getAccountId());
+
+        String aggregatedRecipients = aggregateRecipients(
+            request.getToAddress(), request.getCcAddress(), request.getBccAddress()
+        );
+
+        Mail mail = new Mail();
+        mail.setUserId(userId);
+        mail.setAccountId(account.getId());
+        mail.setFolder("scheduled");
+        mail.setFromAddress(formatSenderAddress(account));
+        mail.setToAddress(aggregatedRecipients);
+        mail.setCcAddress(request.getCcAddress());
+        mail.setBccAddress(request.getBccAddress());
+        mail.setSubject(request.getSubject());
+        mail.setContent(request.getContent());
+        mail.setPlainContent(request.getPlainContent());
+        mail.setIsRead(true);
+        mail.setIsStarred(false);
+        mail.setIsDeleted(false);
+        mail.setHasAttachment(request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty());
+        mail.setPriority(request.getPriority() != null ? request.getPriority() : 3);
+        mail.setSendTime(scheduledTime);
+
+        mailMapper.insert(mail);
+
+        if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+            for (Long attachmentId : request.getAttachmentIds()) {
+                attachmentMapper.updateMailId(attachmentId, mail.getId());
+            }
+        }
+
+        if (request.getId() != null) {
+            mailMapper.findById(request.getId()).ifPresent(draft -> {
+                if ("drafts".equals(draft.getFolder())) {
+                    mailMapper.delete(request.getId());
+                    log.info("??????: id={}", request.getId());
+                }
+            });
+        }
+
+        log.info("???????: id={}, scheduledTime={}", mail.getId(), scheduledTime);
+        return mail;
+    }
+
+@Override
+    @Transactional
     public Mail createMail(ParsedMail parsedMail) {
         log.info("Creating mail from SMTP: from={}, to={}, subject={}",
             parsedMail.getFrom(), parsedMail.getTo(), parsedMail.getSubject());
@@ -615,6 +679,41 @@ public class MailServiceImpl implements MailService {
             ? attachmentMapper.findByMailId(mail.getId())
             : Collections.emptyList();
         outboundMailSender.send(mail, attachments);
+    }
+
+    private LocalDateTime parseScheduledTime(String scheduledTime) {
+        if (!StringUtils.hasText(scheduledTime)) {
+            return null;
+        }
+        String value = scheduledTime.trim();
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Invalid scheduledTime format. Expect ISO_LOCAL_DATE_TIME.");
+        }
+    }
+
+    @Scheduled(fixedDelayString = "${mail.schedule.dispatch-interval-ms:60000}")
+    @Transactional
+    public void dispatchScheduledMails() {
+        List<Mail> dueMails = mailMapper.findScheduledDue(LocalDateTime.now(), 50);
+        if (dueMails.isEmpty()) {
+            return;
+        }
+        for (Mail mail : dueMails) {
+            try {
+                sendOutbound(mail);
+                distributeToLocalRecipients(mail);
+                mail.setFolder("sent");
+                mail.setIsDeleted(false);
+                mail.setIsRead(true);
+                mail.setSendTime(LocalDateTime.now());
+                mailMapper.update(mail);
+                log.info("Scheduled mail sent: id={}, to={}", mail.getId(), mail.getToAddress());
+            } catch (Exception ex) {
+                log.error("Failed to send scheduled mail: id={}", mail.getId(), ex);
+            }
+        }
     }
 
     private MailAccount resolveMailAccount(Long userId, Long accountId) {

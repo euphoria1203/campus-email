@@ -46,6 +46,9 @@ public interface MailMapper {
                       @Param("limit") int limit,
                       @Param("offset") int offset);
 
+    List<Mail> findScheduledDue(@Param("now") java.time.LocalDateTime now,
+                                @Param("limit") int limit);
+
     // 统计未读邮件数量
     int countUnreadByUserId(@Param("userId") Long userId);
 

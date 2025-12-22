@@ -19,6 +19,11 @@ export const mailApi = {
     return api.post(`/mails/drafts/${id}/send`)
   },
 
+  // 定时发送
+  schedule(data) {
+    return api.post('/mails/schedule', data)
+  },
+
   // 获取用户邮件列表
   list(userId, folder = '') {
     return api.get(`/mails/user/${userId}`, { params: { folder } })

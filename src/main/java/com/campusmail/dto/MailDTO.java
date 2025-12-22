@@ -16,5 +16,7 @@ public class MailDTO {
     private String content;
     private String plainContent;
     private Integer priority;
+    // ISO LocalDateTime string, e.g. 2025-01-01T10:00:00
+    private String scheduledTime;
     private List<Long> attachmentIds;  // 已上传附件的ID列表
 }

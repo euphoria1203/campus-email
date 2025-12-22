@@ -120,6 +120,16 @@
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
+    <select id="findScheduledDue" resultMap="MailResult">
+        SELECT * FROM mail
+        WHERE folder = 'scheduled'
+          AND is_deleted = 0
+          AND send_time IS NOT NULL
+          AND send_time &lt;= #{now}
+        ORDER BY send_time ASC
+        LIMIT #{limit}
+    </select>
+
     <update id="markAsRead">
         UPDATE mail SET is_read = 1 WHERE id = #{id}
     </update>

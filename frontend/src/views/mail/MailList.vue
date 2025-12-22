@@ -182,6 +182,7 @@ const currentFolder = computed(() => {
   if (path.includes('/inbox')) return 'inbox'
   if (path.includes('/sent')) return 'sent'
   if (path.includes('/drafts')) return 'drafts'
+  if (path.includes('/scheduled')) return 'scheduled'
   if (path.includes('/trash')) return 'trash'
   if (path.includes('/starred')) return 'starred'
   return 'inbox'
@@ -193,12 +194,12 @@ const isTrashFolder = computed(() => currentFolder.value === 'trash')
 const filteredMails = computed(() => {
   let result = mails.value
   
-  // ?????????????????
+  // 当未进行关键字搜索时按账号过滤
   if (selectedAccountId.value && !(searchKeyword.value && searchKeyword.value.trim())) {
     result = result.filter(m => m.accountId === selectedAccountId.value)
   }
   
-  // ????
+  // 星标过滤
   if (currentFolder.value === 'starred') {
     result = result.filter(m => m.isStarred)
   }
@@ -324,7 +325,7 @@ const handleAccountChange = () => {
 const loadMails = async () => {
   const uid = localStorage.getItem('userId')
   if (!uid) {
-    ElMessage.warning('????')
+    ElMessage.warning('请先登录')
     router.push('/login')
     return
   }
@@ -343,11 +344,11 @@ const loadMails = async () => {
     } else {
       response = await mailApi.list(uid, currentFolder.value)
     }
-    // response ?????????data????????
+    // 接口返回可能是数组本身
     mails.value = Array.isArray(response) ? response : []
   } catch (error) {
-    console.error('??????:', error)
-    ElMessage.error('??????')
+    console.error('加载邮件失败:', error)
+    ElMessage.error('加载邮件失败')
   } finally {
     loading.value = false
   }
@@ -450,7 +451,7 @@ watch(() => route.path, () => {
   loadMails()
 })
 
-// ????????????????
+// 搜索关键字变化时重新拉取
 watch(searchKeyword, () => {
   currentPage.value = 1
   loadMails()

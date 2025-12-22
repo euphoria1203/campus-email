@@ -57,6 +57,16 @@ public class MailController {
     }
 
     /**
+     * 定时发送邮件
+     */
+    @PostMapping("/schedule")
+    public ResponseEntity<Mail> schedule(@RequestBody MailDTO request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        request.setUserId(userId);
+        return ResponseEntity.ok(mailService.scheduleMail(userId, request));
+    }
+
+    /**
      * 获取用户邮件列表
      */
     @GetMapping("/user/{userId}")

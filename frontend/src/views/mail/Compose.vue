@@ -7,6 +7,9 @@
         <el-button :icon="Document" @click="saveDraft" :loading="saving">
           存草稿
         </el-button>
+        <el-button :icon="Clock" @click="openScheduleDialog" :loading="scheduling">
+          定时发送
+        </el-button>
         <el-button type="primary" :icon="Promotion" @click="sendMail" :loading="sending">
           发送
         </el-button>
@@ -14,6 +17,24 @@
     </div>
 
     <!-- 邮件编辑区域 -->
+    <el-dialog v-model="scheduleDialogVisible" title="定时发送" width="420px">
+      <el-form label-width="90px">
+        <el-form-item label="发送时间">
+          <el-date-picker
+            v-model="scheduledTime"
+            type="datetime"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            placeholder="请选择发送时间"
+            style="width: 100%"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="scheduleDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="scheduling" @click="scheduleMail">确定</el-button>
+      </template>
+    </el-dialog>
+
     <div class="compose-form">
         <!-- 发件邮箱（从邮箱账号列表中选择，可选） -->
         <div class="form-row">
@@ -85,7 +106,7 @@
 import { ref, reactive, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Promotion } from '@element-plus/icons-vue'
+import { Document, Promotion, Clock } from '@element-plus/icons-vue'
 import RichEditor from '@/components/RichEditor.vue'
 import ContactSelect from '@/components/ContactSelect.vue'
 import AttachmentUpload from '@/components/AttachmentUpload.vue'
@@ -98,6 +119,9 @@ const editorRef = ref(null)
 const attachmentRef = ref(null)
 const showCcBcc = ref(false)
 const sending = ref(false)
+const scheduling = ref(false)
+const scheduleDialogVisible = ref(false)
+const scheduledTime = ref('')
 const saving = ref(false)
 const draftId = ref(null) // 正在编辑的草稿ID
 const forwardId = ref(null) // 正在转发的邮件ID
@@ -148,6 +172,48 @@ const ensureAttachmentsReady = () => {
   return true
 }
 
+const buildMailData = () => {
+  const userId = localStorage.getItem('userId')
+  const attachmentIds = attachments.value
+    .filter(a => a.id)
+    .map(a => a.id)
+
+  return {
+    userId: userId,
+    accountId: getPayloadAccountId(),
+    toAddress: formatRecipientField(mail.to),
+    ccAddress: formatRecipientField(mail.cc),
+    bccAddress: formatRecipientField(mail.bcc),
+    subject: mail.subject || '(无主题)',
+    content: mail.body,
+    plainContent: mail.body ? mail.body.replace(/<[^>]*>/g, '') : '',
+    attachmentIds: attachmentIds,
+    id: draftId.value
+  }
+}
+
+const ensureReadyToSend = async () => {
+  if (!hasAnyRecipient()) {
+    ElMessage.warning('请至少填写收件人/抄送/密送')
+    return false
+  }
+  if (!ensureAttachmentsReady()) {
+    return false
+  }
+  if (!mail.subject.trim()) {
+    try {
+      await ElMessageBox.confirm('邮件主题为空，是否继续发送？', '提示', {
+        confirmButtonText: '继续发送',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
 // 切换抄送/密送显示
 const toggleCcBcc = () => {
   showCcBcc.value = !showCcBcc.value
@@ -155,62 +221,90 @@ const toggleCcBcc = () => {
 
 // 发送邮件
 const sendMail = async () => {
-  // 验证
-  if (!hasAnyRecipient()) {
-    ElMessage.warning('请至少填写一个收件人/抄送/密送')
+  if (!(await ensureReadyToSend())) {
     return
-  }
-  if (!ensureAttachmentsReady()) {
-    return
-  }
-  if (!mail.subject.trim()) {
-    try {
-      await ElMessageBox.confirm('邮件主题为空，确定要发送吗？', '提示', {
-        confirmButtonText: '发送',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-    } catch {
-      return
-    }
   }
 
   sending.value = true
   
   try {
-    const userId = localStorage.getItem('userId')
-    
-    // 提取附件ID列表
-    const attachmentIds = attachments.value
-      .filter(a => a.id) // 只取已上传成功的附件
-      .map(a => a.id)
-
-    const mailData = {
-      userId: userId,
-      accountId: getPayloadAccountId(),
-      toAddress: formatRecipientField(mail.to),
-      ccAddress: formatRecipientField(mail.cc),
-      bccAddress: formatRecipientField(mail.bcc),
-      subject: mail.subject || '(无主题)',
-      content: mail.body,
-      plainContent: mail.body ? mail.body.replace(/<[^>]*>/g, '') : '',
-      attachmentIds: attachmentIds,
-      id: draftId.value // 如果是编辑草稿后发送，携带草稿ID
-    }
-
+    const mailData = buildMailData()
     await mailApi.send(mailData)
 
-    ElMessage.success('邮件发送成功')
+    ElMessage.success('发送成功')
     router.push('/sent')
   } catch (error) {
-    console.error('发送邮件失败', error)
-    ElMessage.error(error.response?.data?.message || '发送失败，请重试')
+    console.error('发送失败', error)
+    ElMessage.error(error.response?.data?.message || '发送失败')
   } finally {
     sending.value = false
   }
 }
 
-// 保存草稿
+const scheduledQueueKey = 'scheduledSendQueue'
+
+const addScheduledQueueItem = (mail) => {
+  if (!mail?.id) {
+    return
+  }
+  let queue = []
+  try {
+    const raw = localStorage.getItem(scheduledQueueKey)
+    queue = raw ? JSON.parse(raw) : []
+  } catch {
+    queue = []
+  }
+  if (!Array.isArray(queue)) {
+    queue = []
+  }
+  if (!queue.some(item => item?.id === mail.id)) {
+    queue.push({
+      id: mail.id,
+      subject: mail.subject || '(无主题)'
+    })
+    localStorage.setItem(scheduledQueueKey, JSON.stringify(queue))
+  }
+}
+
+const scheduleMail = async () => {
+  if (!(await ensureReadyToSend())) {
+    return
+  }
+  if (!scheduledTime.value) {
+    ElMessage.warning('请选择发送时间')
+    return
+  }
+  const parsed = Date.parse(scheduledTime.value)
+  if (Number.isNaN(parsed)) {
+    ElMessage.warning('发送时间格式不正确')
+    return
+  }
+  if (parsed <= Date.now()) {
+    ElMessage.warning('发送时间必须晚于当前时间')
+    return
+  }
+
+  scheduling.value = true
+  try {
+    const mailData = buildMailData()
+    mailData.scheduledTime = scheduledTime.value
+    const response = await mailApi.schedule(mailData)
+    addScheduledQueueItem(response)
+    ElMessage.success('定时发送已创建')
+    scheduleDialogVisible.value = false
+    router.push('/scheduled')
+  } catch (error) {
+    console.error('定时发送失败', error)
+    ElMessage.error(error.response?.data?.message || '定时发送失败')
+  } finally {
+    scheduling.value = false
+  }
+}
+
+const openScheduleDialog = () => {
+  scheduleDialogVisible.value = true
+}
+
 const saveDraft = async () => {
   const userId = localStorage.getItem('userId')
   if (!userId) {

@@ -14,6 +14,8 @@ public interface MailService {
 
     Mail sendDraft(Long userId, Long mailId);
 
+    Mail scheduleMail(Long userId, MailDTO request);
+
     List<Mail> listMails(Long userId, String folder);
 
     Optional<Mail> getMailById(Long id, Long userId);

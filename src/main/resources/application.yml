@@ -54,6 +54,10 @@ smtp:
   port: 25
   thread-pool-size: 10
 
+mail:
+  schedule:
+    dispatch-interval-ms: 60000
+
 logging:
   level:
     com.campusmail: INFO

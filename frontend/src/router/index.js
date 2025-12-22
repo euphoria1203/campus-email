@@ -42,6 +42,12 @@ const routes = [
         meta: { folder: 'drafts', title: '草稿箱' }
       },
       {
+        path: 'scheduled',
+        name: 'Scheduled',
+        component: () => import('@/views/mail/MailList.vue'),
+        meta: { folder: 'scheduled', title: '定时发送' }
+      },
+      {
         path: 'trash',
         name: 'Trash',
         component: () => import('@/views/mail/MailList.vue'),

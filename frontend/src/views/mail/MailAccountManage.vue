@@ -156,10 +156,10 @@ const handleSubmit = () => {
       let response
       if (isEdit.value) {
         response = await mailAccountApi.update(editingId.value, data)
-        ElMessage.success('????')
+        ElMessage.success('更新成功')
       } else {
         response = await mailAccountApi.create(data)
-        ElMessage.success('????')
+        ElMessage.success('创建成功')
       }
 
       if (form.value.isDefault) {
@@ -170,7 +170,7 @@ const handleSubmit = () => {
       dialogVisible.value = false
       loadAccounts()
     } catch (e) {
-      ElMessage.error(isEdit.value ? '????' : '????')
+      ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
     }
   })
 }
@@ -178,17 +178,17 @@ const handleSubmit = () => {
 const setDefault = async (row) => {
   try {
     await mailAccountApi.update(row.id, { ...row, isDefault: true })
-    ElMessage.success('???????')
+    ElMessage.success('设置默认邮箱成功')
     updateCurrentAccount(row.id)
     loadAccounts()
   } catch (e) {
-    ElMessage.error('??????????')
+    ElMessage.error('设置默认邮箱失败')
   }
 }
 
 const remove = async (row) => {
   try {
-    await ElMessageBox.confirm('????????????', '??', {
+    await ElMessageBox.confirm('确认删除该邮箱账号？', '提示', {
       type: 'warning'
     })
     await mailAccountApi.delete(row.id)
@@ -196,10 +196,10 @@ const remove = async (row) => {
     if (currentId && currentId === row.id) {
       clearCurrentAccount()
     }
-    ElMessage.success('????')
+    ElMessage.success('删除成功')
     loadAccounts()
   } catch (e) {
-    // ????????????????
+    // 取消删除无需提示
   }
 }
 
