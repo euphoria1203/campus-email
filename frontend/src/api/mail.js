@@ -26,15 +26,11 @@ export const mailApi = {
 
   // 搜索邮件（后端全文检索）
   search({ keyword, folder = '', accountId = null, page = 0, size = 200 }) {
-    return api.get('/mails/search', {
-      params: {
-        keyword,
-        folder,
-        accountId,
-        page,
-        size
-      }
-    })
+    const params = { keyword, folder, page, size }
+    if (accountId !== null && accountId !== undefined && accountId !== '') {
+      params.accountId = accountId
+    }
+    return api.get('/mails/search', { params })
   },
 
   // 获取邮件详情

@@ -193,24 +193,14 @@ const isTrashFolder = computed(() => currentFolder.value === 'trash')
 const filteredMails = computed(() => {
   let result = mails.value
   
-  // 按邮箱账号过滤
-  if (selectedAccountId.value) {
+  // ?????????????????
+  if (selectedAccountId.value && !(searchKeyword.value && searchKeyword.value.trim())) {
     result = result.filter(m => m.accountId === selectedAccountId.value)
   }
   
-  // 星标过滤
+  // ????
   if (currentFolder.value === 'starred') {
     result = result.filter(m => m.isStarred)
-  }
-  
-  // 搜索过滤
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(m => 
-      (m.subject && m.subject.toLowerCase().includes(keyword)) ||
-      (m.fromAddress && m.fromAddress.toLowerCase().includes(keyword)) ||
-      (m.plainContent && m.plainContent.toLowerCase().includes(keyword))
-    )
   }
   
   return result
@@ -327,25 +317,37 @@ const loadMailAccounts = async () => {
 const handleAccountChange = () => {
   selectedMails.value = []
   currentPage.value = 1
+  loadMails()
 }
 
 // 加载邮件列表
 const loadMails = async () => {
   const uid = localStorage.getItem('userId')
   if (!uid) {
-    ElMessage.warning('请先登录')
+    ElMessage.warning('????')
     router.push('/login')
     return
   }
   
   loading.value = true
   try {
-    const response = await mailApi.list(uid, currentFolder.value)
-    // response 已经是拦截器返回的 data，它本身就是数组
+    let response
+    if (searchKeyword.value && searchKeyword.value.trim()) {
+      response = await mailApi.search({
+        keyword: searchKeyword.value.trim(),
+        folder: currentFolder.value,
+        accountId: selectedAccountId.value,
+        page: 0,
+        size: 200
+      })
+    } else {
+      response = await mailApi.list(uid, currentFolder.value)
+    }
+    // response ?????????data????????
     mails.value = Array.isArray(response) ? response : []
   } catch (error) {
-    console.error('加载邮件失败:', error)
-    ElMessage.error('加载邮件失败')
+    console.error('??????:', error)
+    ElMessage.error('??????')
   } finally {
     loading.value = false
   }
@@ -445,6 +447,12 @@ const handleRestore = async () => {
 
 // 监听路由变化，重新加载邮件
 watch(() => route.path, () => {
+  loadMails()
+})
+
+// ????????????????
+watch(searchKeyword, () => {
+  currentPage.value = 1
   loadMails()
 })
 

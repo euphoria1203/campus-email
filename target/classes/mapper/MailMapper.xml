@@ -85,8 +85,7 @@
 
     <select id="search" resultMap="MailResult">
         SELECT *,
-               MATCH(subject, plain_content, content, from_address, to_address, cc_address, bcc_address)
-                   AGAINST (#{keyword} IN BOOLEAN MODE) AS score
+               MATCH(subject, plain_content) AGAINST (#{keyword} IN BOOLEAN MODE) AS score
         FROM mail
         WHERE user_id = #{userId}
           AND is_deleted = 0
@@ -106,8 +105,17 @@
         <if test="accountId != null">
             AND account_id = #{accountId}
         </if>
-        AND MATCH(subject, plain_content, content, from_address, to_address, cc_address, bcc_address)
-            AGAINST (#{keyword} IN BOOLEAN MODE)
+        <if test="keyword != null and keyword != ''">
+            AND (
+                MATCH(subject, plain_content) AGAINST (#{keyword} IN BOOLEAN MODE)
+                OR subject LIKE CONCAT('%', #{keyword}, '%')
+                OR from_address LIKE CONCAT('%', #{keyword}, '%')
+                OR to_address LIKE CONCAT('%', #{keyword}, '%')
+                OR cc_address LIKE CONCAT('%', #{keyword}, '%')
+                OR bcc_address LIKE CONCAT('%', #{keyword}, '%')
+                OR plain_content LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
         ORDER BY score DESC, receive_time DESC, send_time DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>

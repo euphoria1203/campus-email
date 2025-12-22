@@ -184,15 +184,12 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public List<Mail> search(Long userId, String keyword, String folder, Long accountId, int page, int size) {
-        if (!org.springframework.util.StringUtils.hasText(keyword)) {
-            return java.util.Collections.emptyList();
+        if (!StringUtils.hasText(keyword)) {
+            return Collections.emptyList();
         }
         int pageSize = Math.min(Math.max(size, 1), 200);
         int offset = Math.max(page, 0) * pageSize;
         String query = keyword.trim();
-        if (!query.contains("*")) {
-            query = query + "*";
-        }
         List<Mail> mails = mailMapper.search(userId, query, folder, accountId, pageSize, offset);
         sanitizeMailCollection(mails);
         applyHighlight(mails, keyword.trim());
