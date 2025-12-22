@@ -2,16 +2,18 @@ spring:
   application:
     name: campus-mail
   mail:
-    host: localhost
-    port: 2525
-    username: ""
-    password: ""
+    host: smtp.qq.com
+    port: 465
+    username: 1544178959@qq.com
+    password: fdqmboowqeoriiae
     properties:
       mail:
         smtp:
-          auth: false
+          auth: true
           starttls:
             enable: false
+          ssl:
+            enable: true
   datasource:
     url: jdbc:mysql://localhost:3306/campus_mail?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
     username: root

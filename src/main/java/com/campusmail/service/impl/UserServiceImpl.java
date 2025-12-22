@@ -53,6 +53,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(UserRegisterDTO request) {
+        assertCampusEmail(request.getEmail());
         // 创建用户
         User user = new User();
         user.setId(idGen.nextId());
@@ -77,6 +78,16 @@ public class UserServiceImpl implements UserService {
         mailAccountMapper.insert(mailAccount);
 
         return user;
+    }
+
+    private void assertCampusEmail(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("email must end with @campus.mail");
+        }
+        String normalized = email.trim().toLowerCase();
+        if (!normalized.endsWith("@campus.mail")) {
+            throw new IllegalArgumentException("email must end with @campus.mail");
+        }
     }
 
     @Override

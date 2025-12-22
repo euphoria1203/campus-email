@@ -50,10 +50,8 @@
     <!-- 新增/编辑账号对话框 -->
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑邮箱账号' : '新增邮箱账号'" width="500px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="邮箱账号" prop="emailPrefix">
-          <el-input v-model="form.emailPrefix" placeholder="请输入账号前缀" :disabled="isEdit">
-            <template #append>@campus.mail</template>
-          </el-input>
+        <el-form-item label="邮箱账号" prop="emailAddress">
+          <el-input v-model="form.emailAddress" placeholder="请输入邮箱地址" :disabled="isEdit" />
         </el-form-item>
         <el-form-item label="显示名称" prop="displayName">
           <el-input v-model="form.displayName" placeholder="发件人显示名称，可选" />
@@ -84,20 +82,32 @@ const isEdit = ref(false)
 const editingId = ref(null)
 
 const form = ref({
-  emailPrefix: '',
+  emailAddress: '',
   displayName: '',
   isDefault: false
 })
 
 const rules = {
-  emailPrefix: [
-    { required: true, message: '请输入邮箱账号前缀', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9._-]+$/, message: '只能包含字母、数字、点、下划线和连字符', trigger: 'blur' }
+  emailAddress: [
+    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入合法邮箱地址', trigger: 'blur' }
   ]
 }
 
 // 保持字符串，避免 Snowflake ID 精度丢失
 const userId = localStorage.getItem('userId') || ''
+
+const updateCurrentAccount = (accountId) => {
+  if (!accountId) return
+  localStorage.setItem('currentAccountId', accountId)
+  window.dispatchEvent(new CustomEvent('account-switch', { detail: { accountId } }))
+}
+
+const clearCurrentAccount = () => {
+  localStorage.removeItem('currentAccountId')
+  window.dispatchEvent(new CustomEvent('account-switch', { detail: { accountId: null } }))
+}
+
 
 const loadAccounts = async () => {
   if (!userId) return
@@ -114,7 +124,7 @@ const openCreateDialog = () => {
   isEdit.value = false
   editingId.value = null
   form.value = {
-    emailPrefix: '',
+    emailAddress: '',
     displayName: '',
     isDefault: false
   }
@@ -124,10 +134,8 @@ const openCreateDialog = () => {
 const openEditDialog = (row) => {
   isEdit.value = true
   editingId.value = row.id
-  // 提取前缀
-  const prefix = row.emailAddress.split('@')[0]
   form.value = {
-    emailPrefix: prefix,
+    emailAddress: row.emailAddress,
     displayName: row.displayName,
     isDefault: row.isDefault
   }
@@ -138,26 +146,31 @@ const handleSubmit = () => {
   formRef.value.validate(async (valid) => {
     if (!valid) return
     try {
-      const emailAddress = `${form.value.emailPrefix}@campus.mail`
       const data = {
-        emailAddress,
+        emailAddress: form.value.emailAddress,
         displayName: form.value.displayName,
         isDefault: form.value.isDefault,
         userId
       }
 
+      let response
       if (isEdit.value) {
-        await mailAccountApi.update(editingId.value, data)
-        ElMessage.success('更新成功')
+        response = await mailAccountApi.update(editingId.value, data)
+        ElMessage.success('????')
       } else {
-        await mailAccountApi.create(data)
-        ElMessage.success('新增成功')
+        response = await mailAccountApi.create(data)
+        ElMessage.success('????')
+      }
+
+      if (form.value.isDefault) {
+        const accountId = response?.id || editingId.value
+        updateCurrentAccount(accountId)
       }
       
       dialogVisible.value = false
       loadAccounts()
     } catch (e) {
-      ElMessage.error(isEdit.value ? '更新失败' : '新增失败')
+      ElMessage.error(isEdit.value ? '????' : '????')
     }
   })
 }
@@ -165,23 +178,28 @@ const handleSubmit = () => {
 const setDefault = async (row) => {
   try {
     await mailAccountApi.update(row.id, { ...row, isDefault: true })
-    ElMessage.success('已设为默认邮箱')
+    ElMessage.success('???????')
+    updateCurrentAccount(row.id)
     loadAccounts()
   } catch (e) {
-    ElMessage.error('操作失败，请稍后重试')
+    ElMessage.error('??????????')
   }
 }
 
 const remove = async (row) => {
   try {
-    await ElMessageBox.confirm('确定要删除该邮箱账号吗？', '提示', {
+    await ElMessageBox.confirm('????????????', '??', {
       type: 'warning'
     })
     await mailAccountApi.delete(row.id)
-    ElMessage.success('删除成功')
+    const currentId = Number(localStorage.getItem('currentAccountId'))
+    if (currentId && currentId === row.id) {
+      clearCurrentAccount()
+    }
+    ElMessage.success('????')
     loadAccounts()
   } catch (e) {
-    // 用户取消或请求失败都不再额外提示
+    // ????????????????
   }
 }
 

@@ -9,6 +9,7 @@ import com.campusmail.mapper.MailAccountMapper;
 import com.campusmail.mapper.MailMapper;
 import com.campusmail.service.AttachmentService;
 import com.campusmail.service.MailService;
+import com.campusmail.service.OutboundMailSender;
 import com.campusmail.smtp.ParsedMail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,15 +38,18 @@ public class MailServiceImpl implements MailService {
     private final AttachmentMapper attachmentMapper;
     private final AttachmentService attachmentService;
     private final MailAccountMapper mailAccountMapper;
+    private final OutboundMailSender outboundMailSender;
 
     public MailServiceImpl(MailMapper mailMapper,
                            AttachmentMapper attachmentMapper,
                            AttachmentService attachmentService,
-                           MailAccountMapper mailAccountMapper) {
+                           MailAccountMapper mailAccountMapper,
+                           OutboundMailSender outboundMailSender) {
         this.mailMapper = mailMapper;
         this.attachmentMapper = attachmentMapper;
         this.attachmentService = attachmentService;
         this.mailAccountMapper = mailAccountMapper;
+        this.outboundMailSender = outboundMailSender;
     }
 
     @Override
@@ -90,6 +94,7 @@ public class MailServiceImpl implements MailService {
             }
         }
 
+        sendOutbound(mail);
         distributeToLocalRecipients(mail);
 
         // 如果是从草稿编辑后发送，删除原草稿
@@ -324,6 +329,7 @@ public class MailServiceImpl implements MailService {
         ));
 
         mailMapper.update(draft);
+        sendOutbound(draft);
         distributeToLocalRecipients(draft);
         log.info("草稿发送成功: id={}, to={}", draft.getId(), draft.getToAddress());
         return draft;
@@ -599,6 +605,16 @@ public class MailServiceImpl implements MailService {
             clones.add(clone);
         }
         attachmentMapper.batchInsert(clones);
+    }
+
+    private void sendOutbound(Mail mail) {
+        if (mail == null) {
+            return;
+        }
+        List<Attachment> attachments = Boolean.TRUE.equals(mail.getHasAttachment())
+            ? attachmentMapper.findByMailId(mail.getId())
+            : Collections.emptyList();
+        outboundMailSender.send(mail, attachments);
     }
 
     private MailAccount resolveMailAccount(Long userId, Long accountId) {

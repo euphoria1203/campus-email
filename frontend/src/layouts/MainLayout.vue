@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { 
   Message, Edit, MessageBox, Promotion, Document, Delete, SwitchButton, ArrowDown, User, StarFilled, Setting
@@ -193,15 +193,40 @@ const loadMailAccounts = async () => {
     if (userId) {
       const data = await mailAccountApi.listByUser(userId)
       mailAccounts.value = Array.isArray(data) ? data : []
-      // 设置当前选中的账号（默认账号）
+      // ???????????????
       const defaultAccount = mailAccounts.value.find(a => a.isDefault)
-      if (defaultAccount && !currentAccountId.value) {
+      const currentId = currentAccountId.value
+      const currentExists = currentId
+        ? mailAccounts.value.some(a => a.id === currentId)
+        : false
+      if (!currentExists) {
+        if (defaultAccount) {
+          currentAccountId.value = defaultAccount.id
+          localStorage.setItem('currentAccountId', defaultAccount.id)
+        } else {
+          currentAccountId.value = null
+          localStorage.removeItem('currentAccountId')
+        }
+      } else if (!currentAccountId.value && defaultAccount) {
         currentAccountId.value = defaultAccount.id
+        localStorage.setItem('currentAccountId', defaultAccount.id)
       }
     }
   } catch (error) {
-    console.error('获取邮箱账号失败:', error)
+    console.error('????????:', error)
   }
+}
+
+const handleAccountSwitchEvent = (event) => {
+  const accountId = event?.detail?.accountId
+  if (accountId) {
+    currentAccountId.value = Number(accountId)
+    localStorage.setItem('currentAccountId', accountId)
+  } else {
+    currentAccountId.value = null
+    localStorage.removeItem('currentAccountId')
+  }
+  loadMailAccounts()
 }
 
 // 处理下拉菜单命令
@@ -225,13 +250,17 @@ const handleDropdownCommand = (command) => {
 
 // 页面加载时获取统计信息
 onMounted(() => {
-  fetchMailStats()
-  loadMailAccounts()
-  // 恢复上次选中的账号
   const savedAccountId = localStorage.getItem('currentAccountId')
   if (savedAccountId) {
     currentAccountId.value = Number(savedAccountId)
   }
+  fetchMailStats()
+  loadMailAccounts()
+  window.addEventListener('account-switch', handleAccountSwitchEvent)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('account-switch', handleAccountSwitchEvent)
 })
 
 // 监听路由变化，刷新统计信息
