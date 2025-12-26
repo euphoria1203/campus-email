@@ -1,6 +1,7 @@
 package com.campusmail.service;
 
 import com.campusmail.dto.MailDTO;
+import com.campusmail.dto.MailStatisticsDTO;
 import com.campusmail.entity.Mail;
 import com.campusmail.smtp.ParsedMail;
 
@@ -46,4 +47,9 @@ public interface MailService {
      * 全文搜索用户邮件
      */
     List<Mail> search(Long userId, String keyword, String folder, Long accountId, int page, int size);
+    
+    /**
+     * 获取用户邮件统计信息
+     */
+    MailStatisticsDTO getMailStatistics(Long userId);
 }

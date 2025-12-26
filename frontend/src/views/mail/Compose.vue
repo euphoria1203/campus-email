@@ -24,6 +24,8 @@
             v-model="scheduledTime"
             type="datetime"
             value-format="YYYY-MM-DDTHH:mm:ss"
+            :disabled-date="disablePastDate"
+            :disabled-time="disablePastTime"
             placeholder="请选择发送时间"
             style="width: 100%"
           />
@@ -122,6 +124,41 @@ const sending = ref(false)
 const scheduling = ref(false)
 const scheduleDialogVisible = ref(false)
 const scheduledTime = ref('')
+
+const disablePastDate = (time) => {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  return time.getTime() < todayStart.getTime()
+}
+
+const disablePastTime = (date) => {
+  if (!date) {
+    return {}
+  }
+
+  const now = new Date()
+  const selected = new Date(date)
+  const isToday =
+    selected.getFullYear() === now.getFullYear() &&
+    selected.getMonth() === now.getMonth() &&
+    selected.getDate() === now.getDate()
+
+  if (!isToday) {
+    return {}
+  }
+
+  const range = (end) => Array.from({ length: end }, (_, i) => i)
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const currentSecond = now.getSeconds()
+
+  return {
+    disabledHours: () => range(currentHour),
+    disabledMinutes: (hour) => (hour === currentHour ? range(currentMinute) : []),
+    disabledSeconds: (hour, minute) =>
+      hour === currentHour && minute === currentMinute ? range(currentSecond + 1) : []
+  }
+}
 const saving = ref(false)
 const draftId = ref(null) // 正在编辑的草稿ID
 const forwardId = ref(null) // 正在转发的邮件ID

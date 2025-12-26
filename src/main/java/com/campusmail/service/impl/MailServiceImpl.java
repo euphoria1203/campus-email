@@ -1,6 +1,10 @@
 package com.campusmail.service.impl;
 
+import com.campusmail.dto.ContactStatDTO;
+import com.campusmail.dto.DailyMailCountDTO;
 import com.campusmail.dto.MailDTO;
+import com.campusmail.dto.MailStatisticsDTO;
+import com.campusmail.dto.ResponseTimeStatDTO;
 import com.campusmail.entity.Attachment;
 import com.campusmail.entity.Mail;
 import com.campusmail.entity.MailAccount;
@@ -19,7 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -36,6 +43,7 @@ import java.util.regex.Pattern;
 public class MailServiceImpl implements MailService {
 
     private static final Logger log = LoggerFactory.getLogger(MailServiceImpl.class);
+    private static final String INTERNAL_EMAIL_DOMAIN = "@campus.mail";
 
     private final MailMapper mailMapper;
     private final AttachmentMapper attachmentMapper;
@@ -66,16 +74,12 @@ public class MailServiceImpl implements MailService {
 
         MailAccount account = resolveMailAccount(userId, request.getAccountId());
 
-        String aggregatedRecipients = aggregateRecipients(
-            request.getToAddress(), request.getCcAddress(), request.getBccAddress()
-        );
-
         Mail mail = new Mail();
         mail.setUserId(userId);
         mail.setAccountId(account.getId());
         mail.setFolder("sent");
         mail.setFromAddress(formatSenderAddress(account));
-        mail.setToAddress(aggregatedRecipients);
+        mail.setToAddress(request.getToAddress());
         mail.setCcAddress(request.getCcAddress());
         mail.setBccAddress(request.getBccAddress());
         mail.setSubject(request.getSubject());
@@ -142,9 +146,7 @@ public class MailServiceImpl implements MailService {
         mail.setAccountId(account.getId());
         mail.setFolder("drafts");
         mail.setFromAddress(formatSenderAddress(account));  // 使用格式化方法包含显示名称
-        mail.setToAddress(aggregateRecipients(
-            request.getToAddress(), request.getCcAddress(), request.getBccAddress()
-        ));
+        mail.setToAddress(request.getToAddress());
         mail.setCcAddress(request.getCcAddress());
         mail.setBccAddress(request.getBccAddress());
         mail.setSubject(request.getSubject());
@@ -327,9 +329,6 @@ public class MailServiceImpl implements MailService {
         draft.setIsDeleted(false);
         draft.setIsRead(true);
         draft.setPriority(draft.getPriority() != null ? draft.getPriority() : 3);
-        draft.setToAddress(aggregateRecipients(
-            draft.getToAddress(), draft.getCcAddress(), draft.getBccAddress()
-        ));
 
         mailMapper.update(draft);
         sendOutbound(draft);
@@ -356,16 +355,12 @@ public class MailServiceImpl implements MailService {
 
         MailAccount account = resolveMailAccount(userId, request.getAccountId());
 
-        String aggregatedRecipients = aggregateRecipients(
-            request.getToAddress(), request.getCcAddress(), request.getBccAddress()
-        );
-
         Mail mail = new Mail();
         mail.setUserId(userId);
         mail.setAccountId(account.getId());
         mail.setFolder("scheduled");
         mail.setFromAddress(formatSenderAddress(account));
-        mail.setToAddress(aggregatedRecipients);
+        mail.setToAddress(request.getToAddress());
         mail.setCcAddress(request.getCcAddress());
         mail.setBccAddress(request.getBccAddress());
         mail.setSubject(request.getSubject());
@@ -675,10 +670,66 @@ public class MailServiceImpl implements MailService {
         if (mail == null) {
             return;
         }
+        Mail outboundMail = buildOutboundMail(mail);
+        if (outboundMail == null) {
+            log.info("Skip outbound SMTP: internal-only recipients mailId={}", mail.getId());
+            return;
+        }
         List<Attachment> attachments = Boolean.TRUE.equals(mail.getHasAttachment())
             ? attachmentMapper.findByMailId(mail.getId())
             : Collections.emptyList();
-        outboundMailSender.send(mail, attachments);
+        outboundMailSender.send(outboundMail, attachments);
+    }
+
+    private Mail buildOutboundMail(Mail source) {
+        String toAddress = filterExternalRecipients(source.getToAddress());
+        String ccAddress = filterExternalRecipients(source.getCcAddress());
+        String bccAddress = filterExternalRecipients(source.getBccAddress());
+
+        if (!StringUtils.hasText(toAddress) && !StringUtils.hasText(ccAddress) && !StringUtils.hasText(bccAddress)) {
+            return null;
+        }
+
+        Mail mail = new Mail();
+        mail.setId(source.getId());
+        mail.setAccountId(source.getAccountId());
+        mail.setFromAddress(source.getFromAddress());
+        mail.setToAddress(toAddress);
+        mail.setCcAddress(ccAddress);
+        mail.setBccAddress(bccAddress);
+        mail.setSubject(source.getSubject());
+        mail.setContent(source.getContent());
+        mail.setPlainContent(source.getPlainContent());
+        return mail;
+    }
+
+    private String filterExternalRecipients(String rawAddresses) {
+        if (!StringUtils.hasText(rawAddresses)) {
+            return null;
+        }
+        Map<String, String> normalized = new LinkedHashMap<>();
+        String[] parts = rawAddresses.split("[;,]");
+        for (String part : parts) {
+            String email = extractEmail(part);
+            if (!StringUtils.hasText(email)) {
+                continue;
+            }
+            if (isInternalAddress(email)) {
+                continue;
+            }
+            normalized.putIfAbsent(email.toLowerCase(), email);
+        }
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        return String.join(",", normalized.values());
+    }
+
+    private boolean isInternalAddress(String email) {
+        if (!StringUtils.hasText(email)) {
+            return false;
+        }
+        return email.trim().toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN);
     }
 
     private LocalDateTime parseScheduledTime(String scheduledTime) {
@@ -735,5 +786,176 @@ public class MailServiceImpl implements MailService {
             return account.getDisplayName() + " <" + account.getEmailAddress() + ">";
         }
         return account.getEmailAddress();
+    }
+    
+    @Override
+    public MailStatisticsDTO getMailStatistics(Long userId) {
+        MailStatisticsDTO statistics = new MailStatisticsDTO();
+        
+        // 基础统计
+        statistics.setTotalMails(mailMapper.countTotalByUserId(userId));
+        statistics.setReceivedMails(mailMapper.countReceivedByUserId(userId));
+        statistics.setSentMails(mailMapper.countSentByUserId(userId));
+        statistics.setDraftMails((long) mailMapper.countDraftsByUserId(userId));
+        statistics.setUnreadMails((long) mailMapper.countUnreadByUserId(userId));
+        statistics.setStarredMails(mailMapper.countStarredByUserId(userId));
+        statistics.setMailsWithAttachment(mailMapper.countWithAttachmentByUserId(userId));
+        
+        // 时间范围统计
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+        LocalDateTime weekStart = now.minusDays(7);
+        LocalDateTime monthStart = now.minusDays(30);
+        
+        statistics.setTodayReceived(mailMapper.countReceivedByUserIdAndTimeRange(userId, todayStart, todayEnd));
+        statistics.setTodaySent(mailMapper.countSentByUserIdAndTimeRange(userId, todayStart, todayEnd));
+        statistics.setWeekReceived(mailMapper.countReceivedByUserIdAndTimeRange(userId, weekStart, now));
+        statistics.setWeekSent(mailMapper.countSentByUserIdAndTimeRange(userId, weekStart, now));
+        statistics.setMonthReceived(mailMapper.countReceivedByUserIdAndTimeRange(userId, monthStart, now));
+        statistics.setMonthSent(mailMapper.countSentByUserIdAndTimeRange(userId, monthStart, now));
+        
+        // 每日邮件数量统计（最近30天）
+        List<DailyMailCountDTO> dailyCounts = mailMapper.getDailyMailCounts(userId, 30);
+        statistics.setDailyMailCounts(fillMissingDates(dailyCounts, 30));
+        
+        // 常用联系人统计（Top 10）
+        List<ContactStatDTO> topContacts = mailMapper.getTopContacts(userId, 10);
+        statistics.setTopContacts(topContacts);
+        
+        // 邮件响应时间统计
+        ResponseTimeStatDTO responseTimeStats = calculateResponseTime(userId);
+        statistics.setResponseTimeStats(responseTimeStats);
+        
+        return statistics;
+    }
+    
+    /**
+     * 填充缺失的日期数据，确保每一天都有数据点
+     */
+    private List<DailyMailCountDTO> fillMissingDates(List<DailyMailCountDTO> dailyCounts, int days) {
+        Map<String, DailyMailCountDTO> countMap = new LinkedHashMap<>();
+        
+        // 初始化所有日期为0
+        LocalDate today = LocalDate.now();
+        for (int i = days - 1; i >= 0; i--) {
+            String date = today.minusDays(i).toString();
+            countMap.put(date, new DailyMailCountDTO(date, 0L, 0L));
+        }
+        
+        // 填充实际数据
+        for (DailyMailCountDTO count : dailyCounts) {
+            countMap.put(count.getDate(), count);
+        }
+        
+        return new ArrayList<>(countMap.values());
+    }
+    
+    /**
+     * 计算邮件响应时间统计
+     */
+    private ResponseTimeStatDTO calculateResponseTime(Long userId) {
+        ResponseTimeStatDTO stats = new ResponseTimeStatDTO();
+        
+        // 获取最近的发送邮件
+        List<Mail> sentMails = mailMapper.getMailsForResponseTimeAnalysis(userId);
+        
+        if (sentMails.isEmpty()) {
+            stats.setTotalResponses(0L);
+            stats.setAvgResponseTimeMinutes(0.0);
+            stats.setMinResponseTimeMinutes(0.0);
+            stats.setMaxResponseTimeMinutes(0.0);
+            stats.setWithinOneHour(0L);
+            stats.setWithinOneDay(0L);
+            stats.setWithinOneWeek(0L);
+            stats.setOverOneWeek(0L);
+            return stats;
+        }
+        
+        List<Double> responseTimes = new ArrayList<>();
+        long withinOneHour = 0;
+        long withinOneDay = 0;
+        long withinOneWeek = 0;
+        long overOneWeek = 0;
+        
+        // 分析每封发送邮件的响应时间
+        for (Mail sentMail : sentMails) {
+            // 查找对应的回复邮件（收件箱中，发件人是原收件人）
+            List<String> recipients = parseRecipients(sentMail.getToAddress());
+            
+            for (String recipient : recipients) {
+                List<Mail> replies = mailMapper.findByUserIdAndFolder(userId, "inbox").stream()
+                    .filter(m -> m.getFromAddress().contains(recipient) 
+                                && m.getReceiveTime() != null 
+                                && m.getReceiveTime().isAfter(sentMail.getSendTime()))
+                    .toList();
+                
+                if (!replies.isEmpty()) {
+                    // 找到最早的回复
+                    Mail earliestReply = replies.stream()
+                        .min((m1, m2) -> m1.getReceiveTime().compareTo(m2.getReceiveTime()))
+                        .orElse(null);
+                    
+                    if (earliestReply != null) {
+                        Duration duration = Duration.between(sentMail.getSendTime(), earliestReply.getReceiveTime());
+                        double minutes = duration.toMinutes();
+                        responseTimes.add(minutes);
+                        
+                        // 按时间段分类
+                        if (minutes <= 60) {
+                            withinOneHour++;
+                        } else if (minutes <= 1440) { // 24小时
+                            withinOneDay++;
+                        } else if (minutes <= 10080) { // 7天
+                            withinOneWeek++;
+                        } else {
+                            overOneWeek++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        stats.setTotalResponses((long) responseTimes.size());
+        stats.setWithinOneHour(withinOneHour);
+        stats.setWithinOneDay(withinOneDay);
+        stats.setWithinOneWeek(withinOneWeek);
+        stats.setOverOneWeek(overOneWeek);
+        
+        if (!responseTimes.isEmpty()) {
+            stats.setAvgResponseTimeMinutes(responseTimes.stream()
+                .mapToDouble(Double::doubleValue).average().orElse(0.0));
+            stats.setMinResponseTimeMinutes(responseTimes.stream()
+                .mapToDouble(Double::doubleValue).min().orElse(0.0));
+            stats.setMaxResponseTimeMinutes(responseTimes.stream()
+                .mapToDouble(Double::doubleValue).max().orElse(0.0));
+        } else {
+            stats.setAvgResponseTimeMinutes(0.0);
+            stats.setMinResponseTimeMinutes(0.0);
+            stats.setMaxResponseTimeMinutes(0.0);
+        }
+        
+        return stats;
+    }
+    
+    /**
+     * 解析收件人地址列表
+     */
+    private List<String> parseRecipients(String toAddress) {
+        if (toAddress == null || toAddress.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        List<String> recipients = new ArrayList<>();
+        String[] addresses = toAddress.split(",");
+        
+        for (String address : addresses) {
+            String email = extractEmail(address.trim());
+            if (!email.isEmpty()) {
+                recipients.add(email);
+            }
+        }
+        
+        return recipients;
     }
 }

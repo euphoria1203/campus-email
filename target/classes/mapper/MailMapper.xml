@@ -172,4 +172,119 @@
         SELECT COUNT(*) FROM mail 
         WHERE user_id = #{userId} AND folder = 'drafts' AND is_deleted = 0
     </select>
+    
+    <!-- ==================== 邮件统计查询 ==================== -->
+    
+    <select id="countTotalByUserId" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND is_deleted = 0
+    </select>
+    
+    <select id="countReceivedByUserId" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND folder = 'inbox' AND is_deleted = 0
+    </select>
+    
+    <select id="countSentByUserId" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND folder = 'sent' AND is_deleted = 0
+    </select>
+    
+    <select id="countStarredByUserId" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND is_starred = 1 AND is_deleted = 0
+    </select>
+    
+    <select id="countWithAttachmentByUserId" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} AND has_attachment = 1 AND is_deleted = 0
+    </select>
+    
+    <select id="countReceivedByUserIdAndTimeRange" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} 
+        AND folder = 'inbox' 
+        AND is_deleted = 0
+        AND receive_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+    
+    <select id="countSentByUserIdAndTimeRange" resultType="Long">
+        SELECT COUNT(*) FROM mail 
+        WHERE user_id = #{userId} 
+        AND folder = 'sent' 
+        AND is_deleted = 0
+        AND send_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+    
+    <select id="getDailyMailCounts" resultType="com.campusmail.dto.DailyMailCountDTO">
+        SELECT 
+            DATE_FORMAT(COALESCE(receive_time, send_time), '%Y-%m-%d') as date,
+            SUM(CASE WHEN folder = 'inbox' THEN 1 ELSE 0 END) as receivedCount,
+            SUM(CASE WHEN folder = 'sent' THEN 1 ELSE 0 END) as sentCount
+        FROM mail
+        WHERE user_id = #{userId}
+        AND is_deleted = 0
+        AND (receive_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+             OR send_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY))
+        GROUP BY DATE_FORMAT(COALESCE(receive_time, send_time), '%Y-%m-%d')
+        ORDER BY date DESC
+    </select>
+    
+    <select id="getTopContacts" resultType="com.campusmail.dto.ContactStatDTO">
+        SELECT 
+            contact_email as email,
+            contact_name as name,
+            SUM(mail_count) as totalCount,
+            SUM(CASE WHEN mail_type = 'received' THEN mail_count ELSE 0 END) as receivedCount,
+            SUM(CASE WHEN mail_type = 'sent' THEN mail_count ELSE 0 END) as sentCount,
+            MAX(last_time) as lastContactTime
+        FROM (
+            -- 收到的邮件（统计发件人）
+            SELECT 
+                from_address as contact_email,
+                (SELECT contact_name FROM contact WHERE email = from_address AND user_id = #{userId} LIMIT 1) as contact_name,
+                COUNT(*) as mail_count,
+                'received' as mail_type,
+                MAX(receive_time) as last_time
+            FROM mail
+            WHERE user_id = #{userId}
+            AND folder = 'inbox'
+            AND is_deleted = 0
+            GROUP BY from_address
+            
+            UNION ALL
+            
+            -- 发送的邮件（统计收件人）
+            SELECT 
+                TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(to_address, ',', numbers.n), ',', -1)) as contact_email,
+                (SELECT contact_name FROM contact WHERE email = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(to_address, ',', numbers.n), ',', -1)) AND user_id = #{userId} LIMIT 1) as contact_name,
+                1 as mail_count,
+                'sent' as mail_type,
+                send_time as last_time
+            FROM mail
+            JOIN (
+                SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+                UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            ) numbers ON CHAR_LENGTH(to_address) - CHAR_LENGTH(REPLACE(to_address, ',', '')) >= numbers.n - 1
+            WHERE user_id = #{userId}
+            AND folder = 'sent'
+            AND is_deleted = 0
+        ) contact_mails
+        WHERE contact_email IS NOT NULL 
+        AND contact_email != ''
+        GROUP BY contact_email, contact_name
+        ORDER BY totalCount DESC
+        LIMIT #{limit}
+    </select>
+    
+    <select id="getMailsForResponseTimeAnalysis" resultMap="MailResult">
+        SELECT * FROM mail
+        WHERE user_id = #{userId}
+        AND folder = 'sent'
+        AND is_deleted = 0
+        AND send_time IS NOT NULL
+        ORDER BY send_time DESC
+        LIMIT 1000
+    </select>
 </mapper>
+

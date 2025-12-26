@@ -74,6 +74,12 @@ const routes = [
         name: 'ContactManage',
         component: () => import('@/views/mail/ContactManage.vue'),
         meta: { title: '联系人簿', folder: 'contacts' }
+      },
+      {
+        path: 'statistics',
+        name: 'Statistics',
+        component: () => import('@/views/mail/Statistics.vue'),
+        meta: { title: '邮件统计' }
       }
     ]
   }

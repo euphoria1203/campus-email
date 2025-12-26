@@ -53,6 +53,13 @@
           <span>垃圾箱</span>
         </el-menu-item>
 
+        <el-divider style="margin: 10px 0;" />
+
+        <el-menu-item index="statistics">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>邮件统计</span>
+        </el-menu-item>
+
         <el-menu-item index="contacts">
           <el-icon><User /></el-icon>
           <span>联系人簿</span>
@@ -125,7 +132,7 @@ import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import { 
-  Message, Edit, MessageBox, Promotion, Document, Delete, SwitchButton, ArrowDown, User, StarFilled, Setting, Clock
+  Message, Edit, MessageBox, Promotion, Document, Delete, SwitchButton, ArrowDown, User, StarFilled, Setting, Clock, DataAnalysis
 } from '@element-plus/icons-vue'
 import { mailApi, mailAccountApi } from '@/api/mail'
 
