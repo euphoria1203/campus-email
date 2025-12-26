@@ -442,7 +442,7 @@ const handleGlobalRefresh = async () => {
 }
 
 .main-content {
-  background: #f5f7fa;
+  background: var(--cm-bg);
   padding: 0;
 }
 
@@ -451,8 +451,8 @@ const handleGlobalRefresh = async () => {
 }
 
 .top-header {
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
+  background: var(--cm-surface);
+  border-bottom: 1px solid var(--cm-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -482,7 +482,7 @@ const handleGlobalRefresh = async () => {
       transition: background-color 0.2s;
 
       &:hover {
-        background-color: #f5f7fa;
+        background-color: rgba(17, 24, 39, 0.04);
       }
 
       .user-details {
@@ -529,14 +529,14 @@ const handleGlobalRefresh = async () => {
       padding: 10px 16px;
       
       &:hover {
-        background-color: #f5f7fa;
+        background-color: rgba(17, 24, 39, 0.04);
       }
 
       &.is-active {
-        background-color: #ecf5ff;
+        background-color: var(--el-color-primary-light-9);
         
         .account-item .account-email {
-          color: #409EFF;
+          color: var(--el-color-primary);
           font-weight: 500;
         }
       }

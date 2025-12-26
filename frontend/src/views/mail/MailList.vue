@@ -571,7 +571,8 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: transparent;
+  padding: 16px;
 }
 
 .loading-container,
@@ -586,9 +587,11 @@ onBeforeUnmount(() => {
 }
 
 .list-summary {
-  padding: 10px 16px;
-  border-bottom: 1px solid #e4e7ed;
-  background: #f5f7fa;
+  padding: 12px 14px;
+  border: 1px solid var(--cm-border);
+  background: var(--cm-surface);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
 
   .summary-left {
     display: flex;
@@ -599,12 +602,12 @@ onBeforeUnmount(() => {
   .summary-title {
     font-size: 16px;
     font-weight: 700;
-    color: #303133;
+    color: var(--cm-text);
   }
 
   .summary-meta {
     font-size: 13px;
-    color: #606266;
+    color: var(--cm-muted);
   }
 }
 
@@ -612,8 +615,12 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e4e7ed;
+  padding: 12px 14px;
+  margin-top: 12px;
+  border: 1px solid var(--cm-border);
+  border-radius: 12px;
+  background: var(--cm-surface);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
 
   .toolbar-left {
     display: flex;
@@ -625,6 +632,10 @@ onBeforeUnmount(() => {
 .mail-list {
   flex: 1;
   overflow-y: auto;
+  margin-top: 12px;
+  border: 1px solid var(--cm-border);
+  border-radius: 12px;
+  background: var(--cm-surface);
 }
 
 .date-group {
@@ -633,24 +644,30 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 12px;
     padding: 10px 16px 6px;
-    color: #303133;
+    color: var(--cm-text);
 
     .date-group-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #409eff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.04);
+      border: 1px solid rgba(17, 24, 39, 0.06);
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--cm-text);
       white-space: nowrap;
 
       .date-group-count {
-        margin-left: 6px;
         font-weight: 500;
-        color: #79bbff;
+        color: var(--cm-muted);
       }
     }
 
     .date-group-line {
       height: 1px;
-      background: #d9ecff;
+      background: rgba(17, 24, 39, 0.08);
       flex: 1;
     }
   }
@@ -660,16 +677,29 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover {
-    background: #f5f7fa;
+    background: rgba(17, 24, 39, 0.03);
   }
 
   &.unread {
-    background: #ecf5ff;
+    background: var(--cm-accent-soft-2);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      border-radius: 999px;
+      background: var(--el-color-primary);
+      opacity: 0.7;
+    }
     
     .mail-sender, .mail-subject {
       font-weight: 600;
@@ -677,7 +707,7 @@ onBeforeUnmount(() => {
   }
 
   &.selected {
-    background: #e6f7ff;
+    background: var(--cm-accent-soft);
   }
 
   .star-icon {
@@ -695,7 +725,7 @@ onBeforeUnmount(() => {
     width: 160px;
     flex-shrink: 0;
     font-size: 14px;
-    color: #303133;
+    color: var(--cm-text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -717,12 +747,12 @@ onBeforeUnmount(() => {
 
     .mail-subject {
       font-size: 14px;
-      color: #303133;
+      color: var(--cm-text);
     }
 
     .mail-preview {
       font-size: 14px;
-      color: #909399;
+      color: var(--cm-muted);
     }
   }
 
@@ -735,7 +765,7 @@ onBeforeUnmount(() => {
     width: 80px;
     text-align: right;
     font-size: 12px;
-    color: #909399;
+    color: var(--cm-muted);
     flex-shrink: 0;
   }
 }
@@ -744,7 +774,10 @@ onBeforeUnmount(() => {
   padding: 16px;
   display: flex;
   justify-content: center;
-  border-top: 1px solid #e4e7ed;
+  border-top: 1px solid rgba(17, 24, 39, 0.06);
+  background: var(--cm-surface);
+  border-radius: 12px;
+  margin-top: 12px;
 }
 
 .account-option {

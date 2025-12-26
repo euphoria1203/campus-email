@@ -7,6 +7,27 @@
 html, body {
   height: 100%;
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  background: #f6f7fb;
+}
+
+:root {
+  --cm-bg: #f6f7fb;
+  --cm-surface: #ffffff;
+  --cm-text: #111827;
+  --cm-muted: #6b7280;
+  --cm-border: rgba(17, 24, 39, 0.08);
+  --cm-accent: #4f46e5;
+  --cm-accent-soft: rgba(79, 70, 229, 0.12);
+  --cm-accent-soft-2: rgba(79, 70, 229, 0.06);
+
+  /* Element Plus theme overrides */
+  --el-color-primary: var(--cm-accent);
+  --el-color-primary-dark-2: #4338ca;
+  --el-color-primary-light-3: #7c75f0;
+  --el-color-primary-light-5: #a5b4fc;
+  --el-color-primary-light-7: #c7d2fe;
+  --el-color-primary-light-8: #e0e7ff;
+  --el-color-primary-light-9: #eef2ff;
 }
 
 a {
