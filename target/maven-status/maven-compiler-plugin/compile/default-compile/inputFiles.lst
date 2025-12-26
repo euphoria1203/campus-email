@@ -1,4 +1,5 @@
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\CampusMailApplication.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\config\JacksonConfig.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\config\JwtAuthenticationEntryPoint.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\config\MyBatisConfig.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\config\RedisConfig.java
@@ -10,8 +11,13 @@ E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\co
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\controller\ContactController.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\controller\MailAccountController.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\controller\MailController.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\controller\MailStatisticsController.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\AttachmentDTO.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\ContactStatDTO.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\DailyMailCountDTO.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\MailDTO.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\MailStatisticsDTO.java
+E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\ResponseTimeStatDTO.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\UserLoginDTO.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\dto\UserRegisterDTO.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\entity\Attachment.java
@@ -45,8 +51,6 @@ E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\sm
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\SMTPServer.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\smtp\SMTPSession.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\AuthenticatedUser.java
-E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\AuthUser.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\JwtAuthenticationFilter.java
-E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\SecurityUtil.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\SecurityUtils.java
 E:\code\Java\网络系统实践项目\CampusMail\src\main\java\com\campusmail\utils\SnowflakeIdGenerator.java

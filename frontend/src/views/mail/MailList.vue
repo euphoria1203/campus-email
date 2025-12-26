@@ -1,5 +1,15 @@
 <template>
   <div class="mail-list-container">
+    <!-- 列表概览 -->
+    <div class="list-summary">
+      <div class="summary-left">
+        <span class="summary-title">{{ folderTitle }}</span>
+        <span class="summary-meta">
+          （共 {{ filteredMails.length }} 封<span v-if="unreadCountInList > 0">，其中未读 {{ unreadCountInList }} 封</span>）
+        </span>
+      </div>
+    </div>
+
     <!-- 工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
@@ -73,51 +83,61 @@
 
     <!-- 邮件列表 -->
     <div v-else class="mail-list">
-      <div 
-        v-for="mail in paginatedMails" 
-        :key="mail.id"
-        class="mail-item"
-        :class="{ unread: !mail.isRead, selected: selectedMails.includes(mail.id) }"
-        @click="handleMailClick(mail)"
-      >
-        <el-checkbox 
-          :model-value="selectedMails.includes(mail.id)"
-          @change="(val) => handleMailSelect(mail.id, val)"
-          @click.stop
-        />
-        
-        <el-icon 
-          class="star-icon" 
-          :class="{ starred: mail.isStarred }"
-          @click.stop="toggleStar(mail)"
-        >
-          <StarFilled v-if="mail.isStarred" />
-          <Star v-else />
-        </el-icon>
-
-        <div class="mail-sender">{{ formatSender(mail.fromAddress) }}</div>
-        
-        <!-- 收件邮箱标识 -->
-        <el-tag 
-          v-if="mailAccounts.length > 1 && getAccountByMail(mail)" 
-          size="small" 
-          :color="getAccountColor(mail.accountId)"
-          effect="dark"
-          class="mail-account-tag"
-        >
-          {{ getAccountByMail(mail)?.emailAddress?.split('@')[0] }}
-        </el-tag>
-        
-        <div class="mail-content">
-          <span class="mail-subject" v-html="renderSubject(mail)"></span>
-          <span class="mail-preview" v-html="renderPreview(mail)"></span>
+      <div v-for="group in groupedPaginatedMails" :key="group.key" class="date-group">
+        <div class="date-group-header">
+          <span class="date-group-title">
+            {{ group.label }}
+            <span class="date-group-count">({{ group.items.length }}封)</span>
+          </span>
+          <span class="date-group-line"></span>
         </div>
 
-        <div class="mail-attachment" v-if="mail.hasAttachment">
-          <el-icon><Paperclip /></el-icon>
-        </div>
+        <div
+          v-for="mail in group.items"
+          :key="mail.id"
+          class="mail-item"
+          :class="{ unread: !mail.isRead, selected: selectedMails.includes(mail.id) }"
+          @click="handleMailClick(mail)"
+        >
+          <el-checkbox
+            :model-value="selectedMails.includes(mail.id)"
+            @change="(val) => handleMailSelect(mail.id, val)"
+            @click.stop
+          />
 
-        <div class="mail-time">{{ formatTime(mail.receiveTime || mail.sendTime) }}</div>
+          <el-icon
+            class="star-icon"
+            :class="{ starred: mail.isStarred }"
+            @click.stop="toggleStar(mail)"
+          >
+            <StarFilled v-if="mail.isStarred" />
+            <Star v-else />
+          </el-icon>
+
+          <div class="mail-sender">{{ formatSender(mail.fromAddress) }}</div>
+
+          <!-- 收件邮箱标识 -->
+          <el-tag
+            v-if="mailAccounts.length > 1 && getAccountByMail(mail)"
+            size="small"
+            :color="getAccountColor(mail.accountId)"
+            effect="dark"
+            class="mail-account-tag"
+          >
+            {{ getAccountByMail(mail)?.emailAddress?.split('@')[0] }}
+          </el-tag>
+
+          <div class="mail-content">
+            <span class="mail-subject" v-html="renderSubject(mail)"></span>
+            <span class="mail-preview" v-html="renderPreview(mail)"></span>
+          </div>
+
+          <div class="mail-attachment" v-if="mail.hasAttachment">
+            <el-icon><Paperclip /></el-icon>
+          </div>
+
+          <div class="mail-time">{{ formatTime(getMailDisplayTime(mail)) }}</div>
+        </div>
       </div>
     </div>
 
@@ -190,6 +210,25 @@ const currentFolder = computed(() => {
 
 const isTrashFolder = computed(() => currentFolder.value === 'trash')
 
+const folderTitle = computed(() => {
+  switch (currentFolder.value) {
+    case 'inbox':
+      return '收件箱'
+    case 'sent':
+      return '发件箱'
+    case 'drafts':
+      return '草稿箱'
+    case 'scheduled':
+      return '定时发送'
+    case 'trash':
+      return '垃圾箱'
+    case 'starred':
+      return '星标邮件'
+    default:
+      return '邮件'
+  }
+})
+
 // 根据搜索关键词过滤邮件
 const filteredMails = computed(() => {
   let result = mails.value
@@ -207,11 +246,69 @@ const filteredMails = computed(() => {
   return result
 })
 
+const unreadCountInList = computed(() => {
+  if (currentFolder.value !== 'inbox') {
+    return 0
+  }
+  return filteredMails.value.reduce((count, mail) => count + (!mail.isRead ? 1 : 0), 0)
+})
+
 // 分页后的邮件列表
 const paginatedMails = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
   return filteredMails.value.slice(start, end)
+})
+
+const getMailDisplayTime = (mail) => {
+  return mail?.receiveTime || mail?.sendTime || mail?.createdAt || mail?.updatedAt || null
+}
+
+const pad2 = (n) => String(n).padStart(2, '0')
+
+const toDateKey = (date) => {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+const getGroupLabel = (date) => {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+  const weekAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000)
+
+  if (date >= today) return '今天'
+  if (date >= yesterday) return '昨天'
+
+  if (date >= weekAgo) {
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+    return weekdays[date.getDay()]
+  }
+
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.getMonth() + 1}月${date.getDate()}日`
+  }
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+const groupedPaginatedMails = computed(() => {
+  const groups = []
+  const groupIndex = new Map()
+
+  for (const mail of paginatedMails.value) {
+    const timeValue = getMailDisplayTime(mail)
+    const date = timeValue ? new Date(timeValue) : null
+    const key = date && !Number.isNaN(date.getTime()) ? toDateKey(date) : 'unknown'
+    const label = date && !Number.isNaN(date.getTime()) ? getGroupLabel(date) : '未知时间'
+
+    if (!groupIndex.has(key)) {
+      const group = { key, label, items: [] }
+      groupIndex.set(key, group)
+      groups.push(group)
+    }
+    groupIndex.get(key).items.push(mail)
+  }
+
+  return groups
 })
 
 // 分页事件处理
@@ -286,6 +383,7 @@ const formatSender = (fromAddress) => {
 const formatTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
+  if (Number.isNaN(date.getTime())) return ''
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
@@ -293,7 +391,7 @@ const formatTime = (time) => {
   if (date >= today) {
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   } else if (date >= yesterday) {
-    return '昨天'
+    return `昨天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
   } else if (date.getFullYear() === now.getFullYear()) {
     return `${date.getMonth() + 1}月${date.getDate()}日`
   } else {
@@ -487,6 +585,29 @@ onBeforeUnmount(() => {
   color: #909399;
 }
 
+.list-summary {
+  padding: 10px 16px;
+  border-bottom: 1px solid #e4e7ed;
+  background: #f5f7fa;
+
+  .summary-left {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .summary-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #303133;
+  }
+
+  .summary-meta {
+    font-size: 13px;
+    color: #606266;
+  }
+}
+
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -504,6 +625,35 @@ onBeforeUnmount(() => {
 .mail-list {
   flex: 1;
   overflow-y: auto;
+}
+
+.date-group {
+  .date-group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px 6px;
+    color: #303133;
+
+    .date-group-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #409eff;
+      white-space: nowrap;
+
+      .date-group-count {
+        margin-left: 6px;
+        font-weight: 500;
+        color: #79bbff;
+      }
+    }
+
+    .date-group-line {
+      height: 1px;
+      background: #d9ecff;
+      flex: 1;
+    }
+  }
 }
 
 .mail-item {
